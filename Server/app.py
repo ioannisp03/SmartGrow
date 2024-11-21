@@ -30,6 +30,11 @@ def index():
     print("Test")
     return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/<path:path>')
+def catch_all(path):
+    print("Test")
+    return send_from_directory(app.static_folder, 'index.html')
+
 @app.route('/api/data', methods=['GET'])
 def get_data():
     return jsonify({
