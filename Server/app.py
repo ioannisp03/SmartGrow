@@ -30,6 +30,10 @@ def index():
     print("Test")
     return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/login')
+def login():
+    return render_template("login.html")
+
 @app.route('/<path:path>')
 def catch_all(path):
     print("Test")
