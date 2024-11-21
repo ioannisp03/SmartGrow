@@ -14,19 +14,20 @@ client = paho.Client()
 client.on_connect = on_connect
 #client.on_message = on_message
 
-client.connect("192.168.1.2", 1883, 60)
+# client.connect("192.168.1.2", 1883, 60)
 
-client.loop_start()
+# client.loop_start()
 
 
 # Web Service
 
 
-app = Flask(__name__, static_folder='../App/dist', static_url_path='')
+app = Flask(__name__, static_folder='../App/dist', static_url_path='/')
 CORS(app)
 
 @app.route('/')
 def index():
+    print("Test")
     return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/api/data', methods=['GET'])

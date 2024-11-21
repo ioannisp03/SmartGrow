@@ -1,12 +1,16 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from "react-router-dom";
+
+import { SnackbarProvider } from 'notistack'
 
 import './index.css'
 
-import App from './routes/home/home.tsx'
+import Routing from './routes.tsx'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+  <SnackbarProvider autoHideDuration={3000} maxSnack={5}>
+    <BrowserRouter basename="/">
+      <Routing />
+    </BrowserRouter>
+  </SnackbarProvider>
 )
