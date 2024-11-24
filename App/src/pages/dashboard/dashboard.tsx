@@ -3,13 +3,12 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const DashboardPage: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);  // Assume true, will be checked on mount
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const navigate = useNavigate();
 
   const checkAuthStatus = async () => {
     try {
-      // Check if the user is authenticated
-      await axios.get('/api/dashboard');  // Replace with your actual auth check API
+      await axios.get('/api/dashboard');
     } catch (error) {
       setIsAuthenticated(false);
       navigate('/login');
