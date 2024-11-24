@@ -12,6 +12,9 @@ class User(db.Model, UserMixin):
     @staticmethod
     def hash_password(password):
         return bcrypt.generate_password_hash(password).decode('utf-8')
+    
+    def set_password(self, password):
+        self.password = self.hash_password(password)
 
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password, password)

@@ -3,8 +3,6 @@ from resources import app,db,login_manager
 
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
-login_manager.init_app(app)
-db.init_app(app)
 
 from routes import *
 

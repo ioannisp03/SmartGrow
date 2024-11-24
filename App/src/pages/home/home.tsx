@@ -1,11 +1,9 @@
 import './home.css'
 
-function App() {
+export default function() {
   return (
     <>
-      <h1>Test stuff lol</h1>
+      <h1>Home Page</h1>
     </>
   )
 }
-
-export default App
