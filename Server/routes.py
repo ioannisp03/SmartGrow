@@ -1,8 +1,7 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, send_from_directory, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required
 from models import User
-from resources import db
-from app import app
+from resources import db,app
 
 @app.route('/')
 def index():
@@ -32,10 +31,12 @@ def login():
         password = request.form.get('password')
 
         user = User.query.filter_by(email=email).first()
+        
         if user and user.check_password(password):
             login_user(user)
             flash('Login successful!', 'success')
             return redirect(url_for('dashboard'))
+        
         flash('Invalid email or password', 'danger')
     return render_template('login.html')
 
