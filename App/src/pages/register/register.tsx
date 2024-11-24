@@ -1,68 +1,95 @@
-import React, { useState } from 'react';
-import { useSnackbar } from 'notistack';
+import React, { useState } from "react";
+import "./register.css";
+import { useSnackbar } from "notistack";
+import { Button, TextField } from "@mui/material";
 
-import axios from 'axios';
+import axios from "axios";
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 const RegisterPage: React.FC = () => {
-    const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
 
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
 
+<<<<<<< HEAD
         try {
             const response = await axios.post('/register', { username, email, password });
+=======
+    try {
+      const response = await axios.post(
+        "/register",
+        { username, email, password },
+        // { headers: { "Content-Type": "application/json" } }
+      );
+>>>>>>> 6f15d75fd323db0ccfab455e2bbb222e57d9b371
 
-            if (response.status === 201) {
-                enqueueSnackbar('Successfully created account!', { variant: 'success' });
-                navigate('/login');
-            } else {
-                enqueueSnackbar("Email already registered.", { variant: 'error' });
-            }
-        } catch (error) {
-            enqueueSnackbar('Failed to register. Please try again.', { variant: 'error' });
-        }
-    };
+      if (response.status === 201) {
+        enqueueSnackbar("Successfully created account!", {
+          variant: "success",
+        });
+        navigate("/login");
+      } else {
+        enqueueSnackbar("Email already registered.", { variant: "error" });
+      }
+    } catch (error) {
+      enqueueSnackbar("Failed to register. Please try again.", {
+        variant: "error",
+      });
+    }
+  };
 
-    return (
-        <div>
-            <h1>Register</h1>
-            <form onSubmit={handleRegister}>
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                />
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
+  return (
+    <div className="register-container">
+      <h2>Register</h2>
+      <form onSubmit={handleRegister}>
+        <div style={{ marginBottom: "20px" }}>
+          <TextField
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
 
-                <button type="submit">Register</button>
-            </form>
-            
-            <p>Already have an account? <a href="/login">Login here</a></p>
+          <TextField
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <TextField
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
         </div>
-    );
+      </form>
+      <Button
+        id="register-button"
+        type="submit"
+        variant="contained"
+        color="primary"
+        style={{ padding: "10px 20px", fontSize: "16px" }}
+        onClick={handleRegister}
+      >
+        Register
+      </Button>
+      <p>
+        Already have an account? <a href="/login">Login here</a>
+      </p>
+    </div>
+  );
 };
 
 export default RegisterPage;

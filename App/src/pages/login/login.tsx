@@ -1,60 +1,88 @@
-import React, { useState } from 'react';
-import { useSnackbar } from 'notistack';
-import axios from 'axios';
-
-import { useNavigate } from 'react-router-dom';
+import "./login.css";
+import { useState } from "react";
+import axios from "axios";
+import { enqueueSnackbar } from "notistack";
+import { useNavigate } from "react-router-dom";
+import { Button, TextField } from "@mui/material"; 
 
 const LoginPage: React.FC = () => {
-    const { enqueueSnackbar } = useSnackbar();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate(); 
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    const navigate = useNavigate();
+    try {
+      const response = await axios.post("/login", {
+        email,
+        password,
+      });
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
+      if (response.status === 200) {
+        enqueueSnackbar("Login successful!", { variant: "success" });
+        navigate("/dashboard");
+      } else {
+        enqueueSnackbar("Login failed!", { variant: "error" });
+      }
+    } catch (error) {
+      enqueueSnackbar("Error during login. Please try again.", {
+        variant: "error",
+      });
+    }
+  };
 
-        try {
-            const response = await axios.post('/login', { email, password });
+  const handleRegister = () => {
+    navigate("/register");
+  };
 
-            if (response.status === 200) {
-                enqueueSnackbar('Successfully logged in!', { variant: 'success' });
-                navigate('/dashboard');
-            } else {
-                enqueueSnackbar('That account does not exist.', { variant: 'error' });
-            }
-        } catch (error) {
-            enqueueSnackbar('Invalid email or password.', { variant: 'error' });
-        }
-    };
-
-    return (
-        <div>
-            <h1>Login</h1>
-            <form onSubmit={handleLogin}>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-
-                <button type="submit">Login</button>
-            </form>
-            <p>
-                Don't have an account? <a href="/register">Register here</a>
-            </p>
+  return (
+    <div className="login-container"
+    >
+      <h2>Login</h2>
+      <form onSubmit={handleLogin}>
+        <div style={{ marginBottom: "20px" }}>
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            variant="outlined"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
-    );
+        <div style={{ marginBottom: "20px" }}>
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            variant="outlined"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <div className="button-container">
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            style={{ padding: "10px 20px", fontSize: "16px" }}
+          >
+            Login
+          </Button>
+          <Button
+            type="button"
+            variant="outlined"
+            color="primary"
+            style={{ padding: "10px 20px", fontSize: "16px" }}
+            onClick={handleRegister}
+          >
+            Register
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default LoginPage;
