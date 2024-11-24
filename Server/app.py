@@ -1,49 +1,44 @@
-from flask import Flask, render_template, send_from_directory, jsonify
-from flask_cors import CORS
+from flask import Flask
+from flask_mqtt import Mqtt
+from config import Config
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from flask_bcrypt import Bcrypt
+from models import User
+from resources import db,bcrypt,login_manager
 
-import paho.mqtt.client as paho
+app = Flask(__name__)
+app.config.from_object(Config)
 
-def on_connect(client, userdata, flags, rc):
-    client.subscribe("sensor/tempdata")
+# Broker
 
-# def on_message(client, userdata, msg):
-    # The data we'll need to disect
+#mqtt = Mqtt(app)
 
-client = paho.Client()
+#@mqtt.on_connect()
+#def handle_connect(client, userdata, flags, rc):
+#    print('Connected to MQTT broker!')
+#    mqtt.subscribe('your/topic')
 
-client.on_connect = on_connect
-#client.on_message = on_message
+#@mqtt.on_message()
+#def handle_mqtt_message(client, userdata, message):
+#    print(f"Received message: {message.payload.decode()} on topic {message.topic}")
 
-# client.connect("192.168.1.2", 1883, 60)
+# Database
 
-# client.loop_start()
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
+login_manager.init_app(app)
 
+db.init_app(app)
 
-# Web Service
+from routes import *
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-app = Flask(__name__, static_folder='../App/dist', static_url_path='/')
-CORS(app)
-
-@app.route('/')
-def index():
-    print("Test")
-    return send_from_directory(app.static_folder, 'index.html')
-
-@app.route('/login')
-def login():
-    return render_template("login.html")
-
-@app.route('/<path:path>')
-def catch_all(path):
-    print("Test")
-    return send_from_directory(app.static_folder, 'index.html')
-
-@app.route('/api/data', methods=['GET'])
-def get_data():
-    return jsonify({
-        "John": True
-    })
+with app.app_context():
+    db.create_all()
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True)
