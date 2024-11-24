@@ -1,28 +1,42 @@
-from flask import render_template, send_from_directory, redirect, url_for, flash, request, jsonify
-from flask_login import login_user, logout_user, login_required
+from flask import send_from_directory, request, jsonify
+from flask_login import login_user, logout_user, login_required, current_user
 from models import User
 from resources import db,app
 
-import os
+# Webpage Endpoints
 
 @app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_react(path):
-    print(f"Requested path: {path}")
-    print(f"Static folder exists: {os.path.exists(app.static_folder)}")
-
-    if path and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    
+def home_page(path):
     return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/login', defaults={'path': ''})
+def login_page(path):
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/register', defaults={'path': ''})
+def register_page(path):
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return send_from_directory(app.static_folder, 'index.html')
+
+# API Endpoints
 
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
+    if not data:
+        return jsonify({'message': 'No data provided'}), 400
+
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
 
+    if not username or not email or not password:
+        return jsonify({'message': 'Missing required fields'}), 400
+    
     if User.query.filter_by(email=email).first():
         return jsonify({'message': 'Email already exists'}), 400
     
@@ -47,11 +61,6 @@ def login():
         return jsonify({'message': 'Login successful'}), 200
     
     return jsonify({'message': 'Invalid email or password'}), 401
-
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('dashboard.html')
 
 @app.route('/api/logout', methods=['POST'])
 @login_required
