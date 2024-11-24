@@ -19,8 +19,12 @@ const RegisterPage: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-        try {
-            const response = await axios.post('/api/register', { username, email, password }, { headers: { 'Content-Type': 'application/json', } });
+    try {
+      const response = await axios.post(
+        "/register",
+        { username, email, password },
+        // { headers: { "Content-Type": "application/json" } }
+      );
 
       if (response.status === 201) {
         enqueueSnackbar("Successfully created account!", {
@@ -72,6 +76,7 @@ const RegisterPage: React.FC = () => {
         variant="contained"
         color="primary"
         style={{ padding: "10px 20px", fontSize: "16px" }}
+        onClick={handleRegister}
       >
         Register
       </Button>
