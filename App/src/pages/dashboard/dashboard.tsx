@@ -1,10 +1,10 @@
-import { Button, CircularProgress, Container, Typography } from '@mui/material';
+import { CircularProgress, Container, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../../services/authcontext';
 
-const DashboardPage: React.FC = () => {
-  const { user, isAuthenticated, logout, checkAuthStatus } = useAuth();
+export default function() {
+  const { user, isAuthenticated, checkAuthStatus } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,22 +16,13 @@ const DashboardPage: React.FC = () => {
     fetchData();
   }, [user]);
 
-  if (loading) return <CircularProgress color="success" />;
-  if (!isAuthenticated) return <div>Redirecting...</div>;
+  if (loading || !isAuthenticated) return <CircularProgress color="success" />;
 
   return (
     <Container maxWidth="xl">
       <Typography variant='h2' component="h3">Welcome, {user?.username}!</Typography>
-      
-      <Button
-        type="button"
-        variant="contained"
-        color="primary"
-        style={{ padding: "10px 20px", fontSize: "16px" }}
-        onClick={logout}
-      >Logout</Button>
     </Container>
   );
 };
 
-export default DashboardPage;
+
