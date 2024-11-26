@@ -1,26 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+
 import { useNavigate } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
+
+import { UserInterface } from '../../types/User';
+import { Container } from '@mui/material';
+
+import axios from 'axios';
 
 const DashboardPage: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [userData, setUserData] = useState({});
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [userData, setUserData] = useState<UserInterface | null>(null);
 
+  const { enqueueSnackbar } = useSnackbar();
+  
   const navigate = useNavigate();
-
-  const checkAuthStatus = async () => {
-    try {
-      const response = await axios.get('/api/user');
-
-      setIsAuthenticated(true);
-      setUserData(response);
-
-      console.log(userData);
-    } catch (error) {
-      setIsAuthenticated(false);
-      navigate('/login');
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -28,20 +22,43 @@ const DashboardPage: React.FC = () => {
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
+      enqueueSnackbar("Logout failed. Please try again.", { variant: "error" });
     }
   };
 
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    const fetchUserInfo = async () => {
+      try {
+        const response = await axios.get('/api/user', {
+          withCredentials: true,
+        });
+
+        const data = response.data;
+
+        if (data.authorized) {
+          setUserData(data.data);
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+          navigate('/login');
+        }
+      } catch (err) {
+        enqueueSnackbar("Failed to authenticate. Please try again.", { variant: "error" });
+        setIsAuthenticated(false);
+        navigate('/login');
+      }
+    };
+
+    fetchUserInfo();
+  }, [enqueueSnackbar, navigate]);
 
   if (!isAuthenticated) return <div>Redirecting...</div>;
 
   return (
-    <div>
-      <h1>Welcome to your Dashboard</h1>
+    <Container maxWidth="xl">
+      <h1>Welcome, {userData?.username}!</h1>
       <button onClick={handleLogout}>Logout</button>
-    </div>
+    </Container>
   );
 };
 

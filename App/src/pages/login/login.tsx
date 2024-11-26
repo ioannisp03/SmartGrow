@@ -8,6 +8,7 @@ import { Button, TextField, Container, Typography, Paper, Box } from "@mui/mater
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
