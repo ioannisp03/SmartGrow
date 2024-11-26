@@ -23,9 +23,7 @@ const RegisterPage: React.FC = () => {
       const response = await axios.post("/register",{ username, email, password });
 
       if (response.status === 201) {
-        enqueueSnackbar("Successfully created account!", {
-          variant: "success",
-        });
+        enqueueSnackbar("Successfully created account!", {variant: "success"});
         navigate("/login");
       } else {
         enqueueSnackbar("Email already registered.", { variant: "error" });

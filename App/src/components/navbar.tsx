@@ -1,7 +1,8 @@
 import * as React from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+
+import axios from 'axios';
 
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -18,11 +19,13 @@ import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import LoginIcon from '@mui/icons-material/Login';
 
+import { useAuth } from '../services/authcontext';
+
 function ResponsiveAppBar() {
   const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
 
-  const auth = false;
+  const { isAuthenticated, logout } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
@@ -47,8 +50,7 @@ function ResponsiveAppBar() {
       const response = await axios.post('/api/logout');
 
       if (response.status === 200) {
-        enqueueSnackbar('Successfully logged out!', { variant: 'success' });
-        navigate('/login');
+        logout();
       } else {
         enqueueSnackbar('You are currently not logged in.', { variant: 'error' });
       }
@@ -143,7 +145,7 @@ function ResponsiveAppBar() {
               sx={{ my: 2, color: 'white', display: 'block' }}
             >About</Button>
           </Box>
-          {auth ? (<Box sx={{ flexGrow: 0 }}>
+          {isAuthenticated ? (<Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 <Avatar alt="User Avatar" />

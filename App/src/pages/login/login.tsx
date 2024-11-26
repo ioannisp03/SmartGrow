@@ -5,21 +5,24 @@ import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
 import { Button, TextField, Container, Typography, Paper, Box } from "@mui/material";
 
+import { useAuth } from "../../services/authcontext";
+
 const LoginPage: React.FC = () => {
+  const { login } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("/login", {email, password});
+      const response = await axios.post("/login", { email, password });
 
-      if (response.status === 200) {
-        enqueueSnackbar("Login successful!", { variant: "success" });
-        navigate("/dashboard");
+      if (response.status === 200 && response.data != null) {
+        login(response.data);
       } else {
         enqueueSnackbar("Login failed!", { variant: "error" });
       }
@@ -30,14 +33,12 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const handleRegister = () => {
-    navigate("/register");
-  };
-
   return (
     <Container maxWidth="sm">
       <Paper sx={{ padding: "20px" }}>
-        <Typography variant="h3" component="h4">Login</Typography>
+        <Typography variant="h3" component="h4">
+          Login
+        </Typography>
 
         <form onSubmit={handleLogin}>
           <TextField
@@ -60,7 +61,15 @@ const LoginPage: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <Box sx={{ alignContent: 'center', justifyContent: 'space-around', display: 'grid', gap: 1, gridTemplateColumns: 'repeat(2, 1fr)' }}>
+          <Box
+            sx={{
+              alignContent: "center",
+              justifyContent: "space-around",
+              display: "grid",
+              gap: 1,
+              gridTemplateColumns: "repeat(2, 1fr)",
+            }}
+          >
             <Button
               type="submit"
               variant="contained"
@@ -75,14 +84,13 @@ const LoginPage: React.FC = () => {
               variant="outlined"
               color="primary"
               style={{ padding: "10px 20px", fontSize: "16px" }}
-              onClick={handleRegister}
+              onClick={() => navigate("/register")}
             >
               Register
             </Button>
           </Box>
         </form>
       </Paper>
-
     </Container>
   );
 };
