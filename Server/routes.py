@@ -1,7 +1,7 @@
 from flask import send_from_directory, request, jsonify, redirect, url_for
 from flask_login import login_user, logout_user, login_required, current_user
 from models import User
-from resources import db,app, login_manager
+from resources import db,app, login_manager, Response
 
 # Webpage Endpoints
 
@@ -23,20 +23,23 @@ def dashboard_page():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        if current_user.id:
+            return Response(message="User already authenticated.", authorized=True)()
+
         data = request.json
 
         if not data:
-            return jsonify({'message': 'No data provided'}), 400
+            return Response(message='No data provided')(), 400
 
         username = data.get('username')
         email = data.get('email')
         password = data.get('password')
 
         if not username or not email or not password:
-            return jsonify({'message': 'Missing required fields'}), 400
+            return Response(message='Missing required fields')(), 400
         
         if User.query.filter_by(email=email).first():
-            return jsonify({'message': 'Email already exists'}), 400
+            return Response(message='Email already exists')(), 400
         
         user = User(username=username, email=email)
         user.set_password(password)
@@ -44,7 +47,7 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        return jsonify({'message': 'User registered successfully'}), 201
+        return Response(message='User registered successfully')(), 201
     
     return send_from_directory(app.static_folder, 'index.html')
 
@@ -63,12 +66,13 @@ def login():
             user_data = {
                 'id': user.id,
                 'username': user.username,
-                'email': user.email
+                'email': user.email,
+                'pi': 1,
             }
 
-            return jsonify({'message': 'Login successful', 'user': user_data}), 200
+            return Response(message='Login successful', data=user_data, authorized=True)(), 200
         
-        return jsonify({'message': 'Invalid email or password'}), 401
+        return Response(message='Invalid email or password')(), 401
     
     return send_from_directory(app.static_folder, 'index.html')
 
@@ -76,7 +80,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return jsonify({'message': 'Logged out successfully'}), 200
+    return Response(message='Logged out successfully')(), 200
 
 @app.route('/api/user', methods=['GET'])
 @login_required
@@ -84,20 +88,22 @@ def get_user_info():
     user_data = {
         'id': current_user.id,
         'username': current_user.username,
-        'email': current_user.email
+        'email': current_user.email,
+        'pi': 1,
     }
 
-    return jsonify(user_data), 200
+    return Response(message='Authorized',authorized=True,data=user_data)(), 200
 
 @login_manager.unauthorized_handler
 def unauthorized():
     if request.path.startswith('/api/'):
-        return jsonify({"error": "not authorized for this action.","message":"permission denied."}), 404
+        return Response(message='not authorized for this action. Permission denied.')(), 401
+
     return redirect(url_for('login'))
 
 @app.errorhandler(404)
 def notfound(error):
     if request.path.startswith('/api/'):
-        return jsonify({"error": "api endpoint not found.","message":"endpoint not found"}), 404
+        return Response(message='api endpoint not found.')(), 404
     
     return redirect(url_for('error_page'))

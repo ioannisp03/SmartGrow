@@ -14,10 +14,7 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("/login", {
-        email,
-        password,
-      });
+      const response = await axios.post("/login", {email, password});
 
       if (response.status === 200) {
         enqueueSnackbar("Login successful!", { variant: "success" });

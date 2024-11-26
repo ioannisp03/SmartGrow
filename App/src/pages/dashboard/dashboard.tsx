@@ -4,11 +4,18 @@ import { useNavigate } from 'react-router-dom';
 
 const DashboardPage: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [userData, setUserData] = useState({});
+
   const navigate = useNavigate();
 
   const checkAuthStatus = async () => {
     try {
-      await axios.get('/api/dashboard');
+      const response = await axios.get('/api/user');
+
+      setIsAuthenticated(true);
+      setUserData(response);
+
+      console.log(userData);
     } catch (error) {
       setIsAuthenticated(false);
       navigate('/login');
