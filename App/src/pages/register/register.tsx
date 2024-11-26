@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import "./register.css";
+
 import { useSnackbar } from "notistack";
 import { Button, TextField } from "@mui/material";
 
+import { useNavigate } from "react-router-dom";
+
 import axios from "axios";
 
-import { useNavigate } from "react-router-dom";
+import "./register.css";
 
 const RegisterPage: React.FC = () => {
   const { enqueueSnackbar } = useSnackbar();

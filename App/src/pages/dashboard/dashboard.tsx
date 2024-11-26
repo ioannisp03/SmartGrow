@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 
 import { useAuth } from '../../services/authcontext';
 
+import "./dashboard.css";
+
 export default function() {
   const { user, isAuthenticated, checkAuthStatus } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -14,7 +16,7 @@ export default function() {
     };
 
     fetchData();
-  }, [user]);
+  }, [user !== null]);
 
   if (loading || !isAuthenticated) return <CircularProgress color="success" />;
 

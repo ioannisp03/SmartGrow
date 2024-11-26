@@ -77,7 +77,6 @@ def login():
     return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/api/logout', methods=['POST'])
-@login_required
 def logout():
     logout_user()
     return Response(message='Logged out successfully')(), 200
