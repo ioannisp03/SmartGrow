@@ -14,6 +14,10 @@ class Response:
             "data": data if data is not None else {}
         }
 
+    def addfield(self, name, data):
+        self.response[name] = data
+        return self
+
     def message(self, message):
         self.response["message"] = message
 
