@@ -16,12 +16,13 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
-
-const pages = ['Home', 'About'];
+import LoginIcon from '@mui/icons-material/Login';
 
 function ResponsiveAppBar() {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+
+  const auth = false;
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
@@ -59,7 +60,7 @@ function ResponsiveAppBar() {
   }
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{ background: "#00AF3A", marginBottom: "20px" }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
@@ -104,11 +105,13 @@ function ResponsiveAppBar() {
               onClose={handleCloseNavMenu}
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography sx={{ textAlign: 'center' }}>{page}</Typography>
-                </MenuItem>
-              ))}
+              <MenuItem key="Home" onClick={() => navigate("/")}>
+                <Typography sx={{ textAlign: 'center' }}>Home</Typography>
+              </MenuItem>
+
+              <MenuItem key="About" onClick={() => navigate("/About")}>
+                <Typography sx={{ textAlign: 'center' }}>About</Typography>
+              </MenuItem>
             </Menu>
           </Box>
           <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
@@ -127,21 +130,20 @@ function ResponsiveAppBar() {
               color: 'inherit',
               textDecoration: 'none',
             }}
-          >
-            SmartGrow
-          </Typography>
+          >SmartGrow</Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-              >
-                {page}
-              </Button>
-            ))}
+            <Button
+              key="Home"
+              onClick={() => navigate("/")}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >Home</Button>
+            <Button
+              key="About"
+              onClick={() => navigate("/About")}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >About</Button>
           </Box>
-          <Box sx={{ flexGrow: 0 }}>
+          {auth ? (<Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 <Avatar alt="User Avatar" />
@@ -163,17 +165,17 @@ function ResponsiveAppBar() {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              <MenuItem key="Account" onClick={() => {
-                navigate("/account")
-              }}><Typography sx={{ textAlign: 'center' }}>Account</Typography></MenuItem>
-
-              <MenuItem key="Dashboard" onClick={() => {
-                navigate("/dashboard")
-              }}><Typography sx={{ textAlign: 'center' }}>Dashboard</Typography></MenuItem>
-
+              <MenuItem key="Account" onClick={() => navigate("/account")}><Typography sx={{ textAlign: 'center' }}>Account</Typography></MenuItem>
+              <MenuItem key="Dashboard" onClick={() => navigate("/dashboard")}><Typography sx={{ textAlign: 'center' }}>Dashboard</Typography></MenuItem>
               <MenuItem key="Logout" onClick={handleLogout}><Typography sx={{ textAlign: 'center' }}>Logout</Typography></MenuItem>
             </Menu>
-          </Box>
+          </Box>) : (
+            <Button
+              key="Login"
+              onClick={() => navigate("/login")}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            ><LoginIcon/>Login</Button>
+          )}
         </Toolbar>
       </Container>
     </AppBar>

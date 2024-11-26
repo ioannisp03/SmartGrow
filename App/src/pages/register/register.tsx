@@ -19,17 +19,8 @@ const RegisterPage: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-<<<<<<< HEAD
-        try {
-            const response = await axios.post('/register', { username, email, password });
-=======
     try {
-      const response = await axios.post(
-        "/register",
-        { username, email, password },
-        // { headers: { "Content-Type": "application/json" } }
-      );
->>>>>>> 6f15d75fd323db0ccfab455e2bbb222e57d9b371
+      const response = await axios.post("/register",{ username, email, password });
 
       if (response.status === 201) {
         enqueueSnackbar("Successfully created account!", {

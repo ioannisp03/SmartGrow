@@ -3,12 +3,12 @@ import { useState } from "react";
 import axios from "axios";
 import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
-import { Button, TextField } from "@mui/material"; 
+import { Button, TextField, Container, Typography, Paper, Box } from "@mui/material";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,51 +37,55 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="login-container"
-    >
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: "20px" }}>
+    <Container maxWidth="sm">
+      <Paper sx={{ padding: "20px" }}>
+        <Typography variant="h3" component="h4">Login</Typography>
+
+        <form onSubmit={handleLogin}>
           <TextField
             fullWidth
             label="Email"
             type="email"
             variant="outlined"
             value={email}
+            sx={{ marginBottom: "20px" }}
             onChange={(e) => setEmail(e.target.value)}
           />
-        </div>
-        <div style={{ marginBottom: "20px" }}>
+
           <TextField
             fullWidth
             label="Password"
             type="password"
             variant="outlined"
             value={password}
+            sx={{ marginBottom: "20px" }}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
-        <div className="button-container">
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            style={{ padding: "10px 20px", fontSize: "16px" }}
-          >
-            Login
-          </Button>
-          <Button
-            type="button"
-            variant="outlined"
-            color="primary"
-            style={{ padding: "10px 20px", fontSize: "16px" }}
-            onClick={handleRegister}
-          >
-            Register
-          </Button>
-        </div>
-      </form>
-    </div>
+
+          <Box sx={{ alignContent: 'center', justifyContent: 'space-around', display: 'grid', gap: 1, gridTemplateColumns: 'repeat(2, 1fr)' }}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              style={{ padding: "10px 20px", fontSize: "16px" }}
+            >
+              Login
+            </Button>
+
+            <Button
+              type="button"
+              variant="outlined"
+              color="primary"
+              style={{ padding: "10px 20px", fontSize: "16px" }}
+              onClick={handleRegister}
+            >
+              Register
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+
+    </Container>
   );
 };
 
