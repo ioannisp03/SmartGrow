@@ -1,4 +1,4 @@
-import { Container, Typography, Box, Paper, Grid, Switch } from "@mui/material";
+import { Container, Typography, Box, Paper, Grid, Switch, CircularProgress } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../services/authcontext";
 import "./dashboard.css";
