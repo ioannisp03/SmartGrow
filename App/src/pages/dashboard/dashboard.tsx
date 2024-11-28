@@ -1,4 +1,12 @@
-import { Container, Typography, Box, Paper, Grid, Switch, CircularProgress } from "@mui/material";
+import {
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Grid,
+  Switch,
+  CircularProgress,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../services/authcontext";
 import "./dashboard.css";
@@ -32,17 +40,20 @@ export default function Dashboard() {
   }, []);
 
   // Not sure how this will be handled yet
-  const handleWaterSwitchChange = (event) => {
+  const handleWaterSwitchChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setIsWaterOn(event.target.checked);
   };
 
-  // Not sure how this will be handled yet
-  const handleLightSwitchChange = (lightKey) => (event) => {
-    setLeds((prevLeds) => ({
-      ...prevLeds,
-      [lightKey]: { status: event.target.checked },
-    }));
-  };
+  // Not sure how this will be handled yet, I just made it buildable for now
+  const handleLightSwitchChange =
+    (lightKey : any) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      setLeds((prevLeds) => ({
+        ...prevLeds,
+        [lightKey]: { status: event.target.checked },
+      }));
+    };
 
   // Dummy data for graph
   const placeholderData = [
