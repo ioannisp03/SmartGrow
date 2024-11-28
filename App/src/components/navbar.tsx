@@ -54,7 +54,7 @@ function ResponsiveAppBar() {
       } else {
         enqueueSnackbar('You are currently not logged in.', { variant: 'error' });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Cannot logout at this moment. Try again later.', { variant: 'error' });
     }
 
@@ -114,6 +114,10 @@ function ResponsiveAppBar() {
               <MenuItem key="About" onClick={() => navigate("/About")}>
                 <Typography sx={{ textAlign: 'center' }}>About</Typography>
               </MenuItem>
+
+              <MenuItem key="Dashboard" onClick={() => navigate("/dashboard")}>
+                <Typography sx={{ textAlign: 'center' }}>dashboard</Typography>
+              </MenuItem>
             </Menu>
           </Box>
           <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
@@ -139,6 +143,11 @@ function ResponsiveAppBar() {
               onClick={() => navigate("/")}
               sx={{ my: 2, color: 'white', display: 'block' }}
             >Home</Button>
+              <Button
+              key="Dashboard"
+              onClick={() => navigate("/dashboard")}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >Dashboard</Button>
             <Button
               key="About"
               onClick={() => navigate("/About")}
@@ -175,8 +184,10 @@ function ResponsiveAppBar() {
             <Button
               key="Login"
               onClick={() => navigate("/login")}
-              sx={{ my: 2, color: 'white', display: 'block' }}
-            ><LoginIcon/>Login</Button>
+              sx={{ my: 2, color: 'white', display: 'flex', alignItems: 'center' }}
+            >
+              <LoginIcon sx={{ mr: .5 }} />Login
+            </Button>
           )}
         </Toolbar>
       </Container>

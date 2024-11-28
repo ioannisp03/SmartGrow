@@ -82,7 +82,7 @@ export default function Dashboard() {
           SmartGrow Dashboard
         </Typography>
         <Typography variant="body1" sx={{ color: "gray" }}>
-          Welcome to the EcoSmart system! <br />
+          Welcome to the SmartGrow system! <br />
           Track and Manage Your Device From Here.
         </Typography>
       </Paper>
