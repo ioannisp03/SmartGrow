@@ -15,11 +15,13 @@
     "@fontsource/roboto": "^5.1.0",
     "@mui/icons-material": "^6.1.8",
     "@mui/material": "^6.1.8",
+    "@mui/x-data-grid": "^7.22.3",
     "axios": "^1.7.8",
     "notistack": "^3.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "recharts": "^2.13.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
