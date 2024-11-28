@@ -2,7 +2,14 @@ import { useState } from "react";
 
 import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
-import { Button, TextField, Container, Typography, Paper, Box } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Container,
+  Typography,
+  Paper,
+  Box,
+} from "@mui/material";
 
 import { useAuth } from "../../services/authcontext";
 
@@ -29,7 +36,7 @@ const LoginPage: React.FC = () => {
       } else {
         enqueueSnackbar("Login failed!", { variant: "error" });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar("Error during login. Please try again.", {
         variant: "error",
       });
@@ -39,8 +46,8 @@ const LoginPage: React.FC = () => {
   return (
     <Container maxWidth="sm">
       <Paper sx={{ padding: "20px" }}>
-        <Typography variant="h3" component="h4">
-          Login
+      <Typography variant="h3" component={"h4"} sx={{marginBottom:"20px"}}>
+      Login
         </Typography>
 
         <form onSubmit={handleLogin}>

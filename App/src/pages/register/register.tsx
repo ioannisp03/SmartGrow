@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 
 import { useSnackbar } from "notistack";
-import { Button, TextField } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Container,
+  Typography,
+  Paper,
+} from "@mui/material";
 
 import { useNavigate } from "react-router-dom";
 
@@ -22,15 +28,21 @@ const RegisterPage: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("/register",{ username, email, password });
+      const response = await axios.post("/register", {
+        username,
+        email,
+        password,
+      });
 
       if (response.status === 201) {
-        enqueueSnackbar("Successfully created account!", {variant: "success"});
+        enqueueSnackbar("Successfully created account!", {
+          variant: "success",
+        });
         navigate("/login");
       } else {
         enqueueSnackbar("Email already registered.", { variant: "error" });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar("Failed to register. Please try again.", {
         variant: "error",
       });
@@ -38,48 +50,56 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="register-container">
-      <h2>Register</h2>
-      <form onSubmit={handleRegister}>
-        <div style={{ marginBottom: "20px" }}>
+    <Container maxWidth="sm">
+      <Paper sx={{ padding: "20px" }}>
+        <Typography variant="h3" component={"h4"} sx={{marginBottom:"20px"}}>
+          Register
+        </Typography>
+        <form onSubmit={handleRegister}>
           <TextField
+            fullWidth
             type="text"
             placeholder="Username"
             value={username}
+            sx={{ marginBottom: "20px" }}
             onChange={(e) => setUsername(e.target.value)}
             required
           />
 
           <TextField
+            fullWidth
             type="email"
             placeholder="Email"
             value={email}
+            sx={{ marginBottom: "20px" }}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
           <TextField
+            fullWidth
             type="password"
             placeholder="Password"
             value={password}
+            sx={{ marginBottom: "20px" }}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-        </div>
-      </form>
-      <Button
-        id="register-button"
-        type="submit"
-        variant="contained"
-        color="primary"
-        style={{ padding: "10px 20px", fontSize: "16px" }}
-        onClick={handleRegister}
-      >
-        Register
-      </Button>
-      <p>
-        Already have an account? <a href="/login">Login here</a>
-      </p>
-    </div>
+        </form>
+        <Button
+          id="register-button"
+          type="submit"
+          variant="contained"
+          color="primary"
+          style={{ padding: "10px 20px", fontSize: "16px" }}
+          onClick={handleRegister}
+        >
+          Register
+        </Button>
+        <Typography sx={{ marginTop: "20px" }}>
+          Already have an account? <a href="/login">Login here</a>
+        </Typography>
+      </Paper>
+    </Container>
   );
 };
 

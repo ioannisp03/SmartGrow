@@ -5,7 +5,7 @@ import { useAuth } from '../../services/authcontext';
 
 import "./dashboard.css";
 
-export default function() {
+export default function Dashboard(){
   const { user, isAuthenticated, checkAuthStatus } = useAuth();
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +24,7 @@ export default function() {
     <Container maxWidth="xl">
       <Typography variant='h2' component="h3">Welcome, {user?.username}!</Typography>
     </Container>
+    
   );
 };
 

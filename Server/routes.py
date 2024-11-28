@@ -23,7 +23,8 @@ def dashboard_page():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        if current_user.id:
+        # if current_user.id:
+        if current_user.is_authenticated: 
             return Response(message="User already authenticated.", authorized=True)()
 
         data = request.json
