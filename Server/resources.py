@@ -40,10 +40,10 @@ class Config:
     SECRET_KEY = 'smartgrow'
     SESSION_COOKIE_NAME = 'smartgrow'
     SESSION_TYPE = 'filesystem'
-    MQTT_BROKER_URL = '192.168.1.2'
+    MQTT_BROKER_URL = 'localhost'
     MQTT_BROKER_PORT = 1883
-    MQTT_USERNAME = 'username'
-    MQTT_PASSWORD = 'password'
+    MQTT_USERNAME = 'smartgrow'
+    MQTT_PASSWORD = 'supersecretsmartgrowpassword'
     MQTT_KEEPALIVE = 5
     MQTT_TLS_ENABLED = False
     MONGO_URI  = 'mongodb://localhost:27017/smartgrow'
@@ -51,10 +51,11 @@ class Config:
 app = Flask(__name__, static_folder='../App/dist', static_url_path='')
 app.config.from_object(Config)
 
-# mqtt = Mqtt(app)
+mqtt = Mqtt(app)
 
 mongo = PyMongo(app)
 users = mongo.db['users']
+items = mongo.db['items']
 
 bcrypt = Bcrypt(app)
 
