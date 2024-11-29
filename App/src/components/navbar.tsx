@@ -114,10 +114,6 @@ function ResponsiveAppBar() {
               <MenuItem key="About" onClick={() => navigate("/About")}>
                 <Typography sx={{ textAlign: 'center' }}>About</Typography>
               </MenuItem>
-
-              <MenuItem key="Dashboard" onClick={() => navigate("/dashboard")}>
-                <Typography sx={{ textAlign: 'center' }}>dashboard</Typography>
-              </MenuItem>
             </Menu>
           </Box>
           <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
@@ -143,11 +139,6 @@ function ResponsiveAppBar() {
               onClick={() => navigate("/")}
               sx={{ my: 2, color: 'white', display: 'block' }}
             >Home</Button>
-              <Button
-              key="Dashboard"
-              onClick={() => navigate("/dashboard")}
-              sx={{ my: 2, color: 'white', display: 'block' }}
-            >Dashboard</Button>
             <Button
               key="About"
               onClick={() => navigate("/About")}

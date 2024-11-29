@@ -59,6 +59,7 @@ const LoginPage: React.FC = () => {
             value={email}
             sx={{ marginBottom: "20px" }}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <TextField
@@ -69,6 +70,7 @@ const LoginPage: React.FC = () => {
             value={password}
             sx={{ marginBottom: "20px" }}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
           <Box

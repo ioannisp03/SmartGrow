@@ -1,6 +1,6 @@
 from flask import send_from_directory, request, jsonify, redirect, url_for
 from flask_login import login_user, logout_user, login_required, current_user
-from models import User
+from models import User, Item
 from resources import db,app, login_manager, Response
 
 # Webpage Endpoints
@@ -23,7 +23,6 @@ def dashboard_page():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # if current_user.id:
         if current_user.is_authenticated: 
             return Response(message="User already authenticated.", authorized=True)()
 
@@ -68,7 +67,7 @@ def login():
                 'id': user.id,
                 'username': user.username,
                 'email': user.email,
-                'pi': 1,
+                'items': user.items,
             }
 
             return Response(message='Login successful', data=user_data, authorized=True)(), 200
@@ -89,7 +88,7 @@ def get_user_info():
         'id': current_user.id,
         'username': current_user.username,
         'email': current_user.email,
-        'pi': 1,
+        'items': [item.id for item in current_user.items],
     }
 
     return Response(message='Authorized',authorized=True,data=user_data)(), 200

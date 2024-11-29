@@ -3,6 +3,7 @@ import { FC } from 'react';
 import { Route, Routes } from 'react-router-dom';
 
 import Navbar from './components/navbar';
+import Footer from './components/footer'
 
 import App from './pages/home/home';
 import Login from './pages/login/login';
@@ -21,6 +22,7 @@ const Routing: FC = () => {
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path="*" element={<Error />} />
       </Routes>
+      <Footer/>
     </>
   );
 };
