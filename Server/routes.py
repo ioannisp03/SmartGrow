@@ -1,7 +1,9 @@
-from flask import send_from_directory, request, jsonify, redirect, url_for
+from flask import send_from_directory, request, redirect, url_for
 from flask_login import login_user, logout_user, login_required, current_user
-from models import User, Item
-from resources import db,app, login_manager, Response
+
+from models import User
+
+from resources import app, login_manager, Response
 
 # Webpage Endpoints
 
@@ -18,63 +20,64 @@ def error_page(path):
 def dashboard_page():
     return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/register')
+def register_page():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/login')
+def login_page():
+    return send_from_directory(app.static_folder, 'index.html')
+
 # API Endpoints
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/api/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        if current_user.is_authenticated: 
-            return Response(message="User already authenticated.", authorized=True)()
+    if current_user.is_authenticated: 
+        return Response(message="User already authenticated.", authorized=True)(), 400
 
-        data = request.json
+    data = request.get_json()
 
-        if not data:
-            return Response(message='No data provided')(), 400
+    if not data:
+        return Response(message='No data provided')(), 400
 
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
 
-        if not username or not email or not password:
-            return Response(message='Missing required fields')(), 400
-        
-        if User.query.filter_by(email=email).first():
-            return Response(message='Email already exists')(), 400
-        
-        user = User(username=username, email=email)
-        user.set_password(password)
-
-        db.session.add(user)
-        db.session.commit()
-
-        return Response(message='User registered successfully')(), 201
+    if not username or not email or not password:
+        return Response(message='Missing required fields')(), 400
     
-    return send_from_directory(app.static_folder, 'index.html')
+    if User.get_by_username(username) or User.get_by_email(email):
+        return Response(message='Username or Email already exists')(), 400
+    
+    user = User(username=username, email=email)
+    user.set_password(password)
 
-@app.route('/login', methods=['GET', 'POST'])
+    user.save()
+
+    return Response(message='User registered successfully')(), 201
+
+@app.route('/api/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
-        data = request.json
-        email = data.get('email')
-        password = data.get('password')
-
-        user = User.query.filter_by(email=email).first()
-
-        if user and user.check_password(password):
-            login_user(user)
-
-            user_data = {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'items': user.items,
-            }
-
-            return Response(message='Login successful', data=user_data, authorized=True)(), 200
-        
-        return Response(message='Invalid email or password')(), 401
+    if current_user.is_authenticated: 
+        return Response(message="User already authenticated.", authorized=True)(), 400
     
-    return send_from_directory(app.static_folder, 'index.html')
+    data = request.get_json()
+
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return Response(message='Missing required fields')(), 400
+
+    user = User.get_by_username(username)
+
+    if not user or not user.check_password(password):
+        return Response(message='Invalid username or password')(), 401
+
+    login_user(user)
+
+    return Response(message='Logged in successfully', data=user.response_data(), authorized=True)(), 200
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
@@ -84,21 +87,17 @@ def logout():
 @app.route('/api/user', methods=['GET'])
 @login_required
 def get_user_info():
-    user_data = {
-        'id': current_user.id,
-        'username': current_user.username,
-        'email': current_user.email,
-        'items': [item.id for item in current_user.items],
-    }
+    if not current_user.is_authenticated:
+        return Response(message='Unauthorized', authorized=False)(), 401
 
-    return Response(message='Authorized',authorized=True,data=user_data)(), 200
+    return Response(message='User data fetched', data=current_user.response_data(), authorized=True)(), 200
 
 @login_manager.unauthorized_handler
 def unauthorized():
     if request.path.startswith('/api/'):
         return Response(message='not authorized for this action. Permission denied.')(), 401
 
-    return redirect(url_for('login'))
+    return redirect(url_for('login_page'))
 
 @app.errorhandler(404)
 def notfound(error):

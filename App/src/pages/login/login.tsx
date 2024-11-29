@@ -13,14 +13,16 @@ import {
 
 import { useAuth } from "../../services/authcontext";
 
-import axios from "axios";
+import axios, { AxiosError } from "axios";
+
+import { ResponseInterface } from "../../types/Response";
 
 import "./login.css";
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
@@ -29,36 +31,37 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("/login", { email, password });
+      const response = await axios.post("/api/login", { username, password });
 
       if (response.status === 200 && response.data != null) {
         login(response.data);
       } else {
         enqueueSnackbar("Login failed!", { variant: "error" });
       }
-    } catch {
-      enqueueSnackbar("Error during login. Please try again.", {
-        variant: "error",
-      });
+    } catch(error) {
+      const axiosError = error as AxiosError<ResponseInterface>;
+
+      enqueueSnackbar(axiosError?.response?.data?.message || "Error during login. Please try again.", { variant: "error" });
     }
   };
 
   return (
     <Container maxWidth="sm">
       <Paper sx={{ padding: "20px" }}>
-      <Typography variant="h3" component={"h4"} sx={{marginBottom:"20px"}}>
-      Login
+        <Typography variant="h3" component={"h4"} sx={{ marginBottom: "20px" }}>
+          Login
         </Typography>
 
         <form onSubmit={handleLogin}>
           <TextField
             fullWidth
-            label="Email"
-            type="email"
+            label="Username"
+            type="text"
+            placeholder="Username"
             variant="outlined"
-            value={email}
+            value={username}
             sx={{ marginBottom: "20px" }}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
 
@@ -66,6 +69,7 @@ const LoginPage: React.FC = () => {
             fullWidth
             label="Password"
             type="password"
+            placeholder="Password"
             variant="outlined"
             value={password}
             sx={{ marginBottom: "20px" }}
