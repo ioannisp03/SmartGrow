@@ -3,7 +3,8 @@ from flask_login import login_user, logout_user, login_required, current_user
 
 from models import User
 
-from resources import app, login_manager, Response
+from resources import app, login_manager
+from response import Response
 
 # Webpage Endpoints
 

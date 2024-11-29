@@ -8,7 +8,6 @@ export default function HomePage() {
           bgcolor: "primary.main",
           color: "white",
           py: 10,
-          mt:-3, // Find better way of making the box 'stick' to the nav bar
           textAlign: "center",
         }}
       >

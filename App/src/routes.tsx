@@ -15,6 +15,7 @@ const Routing: FC = () => {
   return (
     <>
       <Navbar />
+
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/login" element={<Login />} />
@@ -22,7 +23,8 @@ const Routing: FC = () => {
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path="*" element={<Error />} />
       </Routes>
-      <Footer/>
+
+      <Footer />
     </>
   );
 };
