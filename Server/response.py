@@ -1,10 +1,11 @@
 from flask import jsonify
+from flask_login import current_user
 
 class Response:
-    def __init__(self, message: str = "Default message", authorized: bool = False, data: object = None):
+    def __init__(self, message: str = "Not Found", data: object = None):
         self.response = {
             "message": message,
-            "authorized": authorized,
+            "authorized": current_user.is_authenticated or False,
             "data": data if data is not None else {}
         }
 
@@ -30,4 +31,7 @@ class Response:
         return jsonify(self.to_json())
 
     def __str__(self):
+        return jsonify(self.to_json())
+
+    def __repr__(self):
         return jsonify(self.to_json())

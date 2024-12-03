@@ -61,7 +61,7 @@ def register():
 @app.route('/api/login', methods=['POST'])
 def login():
     if current_user.is_authenticated: 
-        return Response(message="User already authenticated.", authorized=True)(), 400
+        return Response(message="User already authenticated.")(), 400
     
     data = request.get_json()
 
@@ -78,7 +78,7 @@ def login():
 
     login_user(user)
 
-    return Response(message='Logged in successfully', data=user.response_data(), authorized=True)(), 200
+    return Response(message='Logged in successfully', data=user.response_data())(), 200
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
@@ -89,9 +89,76 @@ def logout():
 @login_required
 def get_user_info():
     if not current_user.is_authenticated:
-        return Response(message='Unauthorized', authorized=False)(), 401
+        return Response(message='Unauthorized')(), 401
 
-    return Response(message='User data fetched', data=current_user.response_data(), authorized=True)(), 200
+    return Response(message='User data fetched', data=current_user.response_data())(), 200
+
+@app.route('/api/items', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@login_required
+def manage_user_items():
+    if not current_user.is_authenticated:
+        return Response(message='Unauthorized')(), 401
+
+    if request.method == 'GET':
+        items = current_user.get_items()
+
+        return Response(message='User items fetched', data=items)(), 200
+
+    elif request.method == 'POST':
+        item_data = request.get_json()
+
+        if not item_data:
+            return Response(message='Bad request, no data provided')(), 400
+        
+        new_item = current_user.create_item(item_data)
+
+        return Response(message='Item created', data=new_item)(), 201
+
+    elif request.method == 'PUT':
+        item_data = request.get_json()
+
+        if not item_data or 'id' not in item_data:
+            return Response(message='Bad request, missing item ID or data')(), 400
+        
+        item_id = item_data['id']
+        user_item = current_user.get_item_by_id(item_id)
+
+        if user_item is None:
+            return Response(message="Item not found")(), 404
+
+        user_item.update(item_data)
+        current_user.save()
+
+        return Response(message='Item updated', data=user_item)(), 200
+
+    elif request.method == 'DELETE':
+        item_data = request.get_json()
+        
+        if not item_data or 'id' not in item_data:
+            return Response(message='Bad request, missing item ID')(), 400
+        
+        item_id = item_data['id']
+        user_item = current_user.get_item_by_id(item_id)
+
+        if user_item is None:
+            return Response(message="Item not found")(), 404
+
+        current_user.delete_item(item_id)
+
+        return Response(message='Item deleted')(), 200
+
+@app.route('/api/items/<int:id>', methods=['GET'])
+@login_required
+def get_user_item_by_id(id):
+    if not current_user.is_authenticated:
+        return Response(message='Unauthorized')(), 401
+
+    user_item = current_user.get_item_by_id(id)
+
+    if user_item == None:
+        return Response(message="Item not found")(), 404
+
+    return Response(message='User item fetched', data=user_item)(), 200
 
 @login_manager.unauthorized_handler
 def unauthorized():

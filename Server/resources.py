@@ -13,7 +13,6 @@ mqtt = Mqtt(app)
 
 mongo = PyMongo(app)
 users = mongo.db['users']
-items = mongo.db['items']
 
 bcrypt = Bcrypt(app)
 

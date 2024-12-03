@@ -5,6 +5,7 @@ login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
 from routes import *
+from broker import *
 
 @login_manager.user_loader
 def load_user(_id):
@@ -14,4 +15,4 @@ def load_user(_id):
     return User.get_by_id(_id)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
