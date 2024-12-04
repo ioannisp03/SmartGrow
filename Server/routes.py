@@ -102,6 +102,8 @@ def manage_user_items():
     if request.method == 'GET':
         items = current_user.get_items()
 
+        current_user.add_item("Smart Plant")
+
         return Response(message='User items fetched', data=items)(), 200
 
     elif request.method == 'POST':
