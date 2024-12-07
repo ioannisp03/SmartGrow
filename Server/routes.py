@@ -162,6 +162,28 @@ def get_user_device_by_id(id):
 
     return Response(message='User device fetched', data=user_device)(), 200
 
+@app.route('/api/devices/<int:id>/live', methods=['GET'])
+@login_required
+def get_live_user_device_by_id(id):
+    if not current_user.is_authenticated:
+        return Response(message='Unauthorized')(), 401
+
+    user_device = current_user.get_device_by_id(id)
+
+    if user_device == None:
+        return Response(message="Device not found")(), 404
+    
+    print(user_device)
+        
+    mqtt_data = {
+        'name': user_device['name'],
+        'humidity': 20,
+        'water_level': 10,
+        'temperature': 30,
+    }
+
+    return Response(message='User device fetched', data=mqtt_data)(), 200
+
 @login_manager.unauthorized_handler
 def unauthorized():
     if request.path.startswith('/api/'):
