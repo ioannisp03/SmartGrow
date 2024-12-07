@@ -11,7 +11,7 @@ class User(UserMixin):
         self.username = username
         self.email = email
         self.password = password
-        self.devices = [Device(**device) if isinstance(device, dict) else device for device in devices] if devices else []
+        self.devices = [Device(**device, user=self) if isinstance(device, dict) else device for device in devices] if devices else []
 
     def save(self):
         user_data = {
@@ -47,7 +47,7 @@ class User(UserMixin):
         if existing_device:
             return existing_device
 
-        new_device = Device(name=device_name)
+        new_device = Device(name=device_name, user=self)
 
         self.devices.append(new_device)
         self.save()
@@ -99,8 +99,9 @@ class User(UserMixin):
         return f"<User {self.username}>"
 
 class Device:
-    def __init__(self, name, temperature=None, water_level=None, humidity=None):
+    def __init__(self, name, user, temperature=None, water_level=None, humidity=None):
         self.name = name
+        self.user = user
         self.temperature = temperature or []
         self.water_level = water_level or []
         self.humidity = humidity or []
@@ -128,6 +129,9 @@ class Device:
 
         if len(data_map) > 24:
             data_map.pop(0)
+
+        if self.user:
+            self.user.save()
 
     def add_temperature(self, temperature):
         self.add_reading(self.temperature, temperature)
