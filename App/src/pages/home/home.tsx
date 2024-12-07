@@ -23,7 +23,7 @@ export default function HomePage() {
             color="secondary"
             size="large"
             sx={{ mt: 4 }}
-            href="/dashboard"
+            href="/devices"
           >
             Get Started
           </Button>
