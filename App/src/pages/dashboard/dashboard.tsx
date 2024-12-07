@@ -183,7 +183,7 @@ export default function Dashboard() {
                                         : "lightcoral",
                                 }}>
                                 {deviceCurrentData ? (
-                                    <Typography>Water Valve is currently: {deviceCurrentData?.valve_toggle ? "ON" : "OFF"}</Typography>
+                                    <Typography>Valve: {deviceCurrentData?.valve_toggle ? "OPEN" : "CLOSED"}</Typography>
                                 ) : <Skeleton width="60%" />}
 
                                 {deviceCurrentData ? (
