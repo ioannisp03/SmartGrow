@@ -3,14 +3,11 @@ import { useParams } from "react-router-dom";
 import { Container, Typography, Box, Paper, Grid, Switch, Button, Skeleton } from "@mui/material";
 import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, ResponsiveContainer } from "recharts";
 
-import { useAuth } from "../../services/authcontext";
 import { ResponseInterface } from "../../types/Response";
 import { DeviceInterface } from "../../types/Device";
 
 export default function Dashboard() {
     const { id } = useParams();
-
-    const { checkAuthStatus } = useAuth();
 
     const [deviceSavedData, setDeviceSavedData] = useState<DeviceInterface | null>(null);
     const [deviceCurrentData, setDeviceCurrentData] = useState<DeviceInterface | null>(null);
@@ -27,8 +24,7 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                await checkAuthStatus();
-                if (!id) return;
+                if (!id || deviceSavedData) return;
 
                 const response = await fetch(`/api/devices/${id}`);
 
@@ -44,7 +40,7 @@ export default function Dashboard() {
         };
 
         fetchData();
-    }, [id, checkAuthStatus]);
+    }, [id, deviceSavedData]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -52,7 +48,7 @@ export default function Dashboard() {
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [id]);
+    }, [id, deviceCurrentData]);
 
     const handleLiveDataFetch = async () => {
         try {
@@ -165,7 +161,7 @@ export default function Dashboard() {
                                         : "lightcoral",
                                 }}>
                                 {deviceCurrentData ? (
-                                    <Typography>Lights: ${deviceCurrentData?.light_toggle ? "ON" : "OFF"}</Typography>
+                                    <Typography>Lights: {deviceCurrentData?.light_toggle ? "ON" : "OFF"}</Typography>
                                 ) : <Skeleton width="50%" />}
 
                                 {deviceCurrentData ? (
@@ -185,13 +181,11 @@ export default function Dashboard() {
                                     backgroundColor: deviceCurrentData?.valve_toggle
                                         ? "lightblue"
                                         : "lightcoral",
-                                }}
-                            >
-                                <Typography>
-                                    {deviceCurrentData ? (
-                                        `Water Valve is currently: ${deviceCurrentData?.valve_toggle ? "ON" : "OFF"}`
-                                    ) : <Skeleton width="60%" />}
-                                </Typography>
+                                }}>
+                                {deviceCurrentData ? (
+                                    <Typography>Water Valve is currently: {deviceCurrentData?.valve_toggle ? "ON" : "OFF"}</Typography>
+                                ) : <Skeleton width="60%" />}
+
                                 {deviceCurrentData ? (
                                     <Switch
                                         checked={deviceCurrentData?.valve_toggle || false}
@@ -217,7 +211,7 @@ export default function Dashboard() {
                                         <Typography>Time:</Typography>
                                         <Typography>{currentTime}</Typography>
                                     </Container>
-                                ) : <Skeleton sx={{ padding: 2, width: "100%" }} />}
+                                ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
                                 {deviceCurrentData ? (
@@ -225,7 +219,7 @@ export default function Dashboard() {
                                         <Typography>Humidity:</Typography>
                                         <Typography>{deviceCurrentData?.humidity?.[deviceCurrentData?.humidity.length - 1]?.value}</Typography>
                                     </Container>
-                                ) : <Skeleton sx={{ padding: 2, width: "100%" }} />}
+                                ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
                         </Box>
                         <Paper elevation={2} sx={{ marginTop: 2, padding: 2 }}>
@@ -258,7 +252,7 @@ export default function Dashboard() {
                 <Grid item xs={12}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
                         {deviceSavedData ? <Typography variant="h5" gutterBottom>Temperature Over Time</Typography> : <Skeleton width="60%" />}
-                        
+
                         {deviceSavedData ? (
                             <ResponsiveContainer width="100%" height={400}>
                                 <LineChart width={900} height={400} data={deviceSavedData?.humidity} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>

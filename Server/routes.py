@@ -113,7 +113,10 @@ def manage_user_devices():
     if request.method == 'GET':
         devices = current_user.get_devices()
 
-        current_user.add_device("Smart Plant")
+        new_item = current_user.add_device("Smart Plant")
+
+        new_item.add_humidity(10)
+        new_item.add_temperature(10)
 
         return Response(message='User devices fetched', data=devices)(), 200
 

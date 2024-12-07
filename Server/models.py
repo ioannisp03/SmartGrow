@@ -42,13 +42,17 @@ class User(UserMixin):
         }
     
     def add_device(self, device_name):
-        if self.get_device_by_name(device_name):
-            return self.devices
+        existing_device = self.get_device_by_name(device_name)
 
-        self.devices.append(Device(name=device_name))
+        if existing_device:
+            return existing_device
+
+        new_device = Device(name=device_name)
+
+        self.devices.append(new_device)
         self.save()
 
-        return self.devices
+        return new_device
 
     def get_device_by_id(self, id):
         if 0 <= id < len(self.devices):
