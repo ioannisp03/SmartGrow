@@ -1,19 +1,10 @@
 import { useState } from "react";
-
-import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
-import {
-  Button,
-  TextField,
-  Container,
-  Typography,
-  Paper,
-  Box,
-} from "@mui/material";
+import axios, { AxiosError } from "axios";
+import { enqueueSnackbar } from "notistack";
+import { Button, TextField, Container, Typography, Paper, Box } from "@mui/material";
 
 import { useAuth } from "../../services/authcontext";
-
-import axios, { AxiosError } from "axios";
 
 import { ResponseInterface } from "../../types/Response";
 

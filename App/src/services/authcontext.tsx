@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(userData);
         setIsAuthenticated(true);
         enqueueSnackbar("Logged into user!", { variant: "success" });
-        navigate('/dashboard');
+        navigate('/devices');
     };
 
     const logout = async () => {

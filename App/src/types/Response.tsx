@@ -1,3 +1,5 @@
 export interface ResponseInterface {
-    message?: string;
+    authorized: boolean;
+    data: any;
+    message: string;
 }

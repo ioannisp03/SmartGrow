@@ -16,9 +16,9 @@ def home_page(path):
 def error_page(path):
     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/dashboard')
+@app.route('/devices')
 @login_required
-def dashboard_page():
+def devices_page():
     return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/register')
@@ -93,74 +93,74 @@ def get_user_info():
 
     return Response(message='User data fetched', data=current_user.response_data())(), 200
 
-@app.route('/api/items', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/api/devices', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @login_required
-def manage_user_items():
+def manage_user_devices():
     if not current_user.is_authenticated:
         return Response(message='Unauthorized')(), 401
 
     if request.method == 'GET':
-        items = current_user.get_items()
+        devices = current_user.get_devices()
 
-        current_user.add_item("Smart Plant")
+        current_user.add_device("Smart Plant")
 
-        return Response(message='User items fetched', data=items)(), 200
+        return Response(message='User devices fetched', data=devices)(), 200
 
     elif request.method == 'POST':
-        item_data = request.get_json()
+        device_data = request.get_json()
 
-        if not item_data:
+        if not device_data:
             return Response(message='Bad request, no data provided')(), 400
         
-        new_item = current_user.create_item(item_data)
+        new_device = current_user.create_device(device_data)
 
-        return Response(message='Item created', data=new_item)(), 201
+        return Response(message='Device created', data=new_device)(), 201
 
     elif request.method == 'PUT':
-        item_data = request.get_json()
+        device_data = request.get_json()
 
-        if not item_data or 'id' not in item_data:
-            return Response(message='Bad request, missing item ID or data')(), 400
+        if not device_data or 'id' not in device_data:
+            return Response(message='Bad request, missing device ID or data')(), 400
         
-        item_id = item_data['id']
-        user_item = current_user.get_item_by_id(item_id)
+        device_id = device_data['id']
+        user_device = current_user.get_device_by_id(device_id)
 
-        if user_item is None:
-            return Response(message="Item not found")(), 404
+        if user_device is None:
+            return Response(message="Device not found")(), 404
 
-        user_item.update(item_data)
+        user_device.update(device_data)
         current_user.save()
 
-        return Response(message='Item updated', data=user_item)(), 200
+        return Response(message='Device updated', data=user_device)(), 200
 
     elif request.method == 'DELETE':
-        item_data = request.get_json()
+        device_data = request.get_json()
         
-        if not item_data or 'id' not in item_data:
-            return Response(message='Bad request, missing item ID')(), 400
+        if not device_data or 'id' not in device_data:
+            return Response(message='Bad request, missing device ID')(), 400
         
-        item_id = item_data['id']
-        user_item = current_user.get_item_by_id(item_id)
+        device_id = device_data['id']
+        user_device = current_user.get_device_by_id(device_id)
 
-        if user_item is None:
-            return Response(message="Item not found")(), 404
+        if user_device is None:
+            return Response(message="Device not found")(), 404
 
-        current_user.delete_item(item_id)
+        current_user.delete_device(device_id)
 
-        return Response(message='Item deleted')(), 200
+        return Response(message='Device deleted')(), 200
 
-@app.route('/api/items/<int:id>', methods=['GET'])
+@app.route('/api/devices/<int:id>', methods=['GET'])
 @login_required
-def get_user_item_by_id(id):
+def get_user_device_by_id(id):
     if not current_user.is_authenticated:
         return Response(message='Unauthorized')(), 401
 
-    user_item = current_user.get_item_by_id(id)
+    user_device = current_user.get_device_by_id(id)
 
-    if user_item == None:
-        return Response(message="Item not found")(), 404
+    if user_device == None:
+        return Response(message="Device not found")(), 404
 
-    return Response(message='User item fetched', data=user_item)(), 200
+    return Response(message='User device fetched', data=user_device)(), 200
 
 @login_manager.unauthorized_handler
 def unauthorized():

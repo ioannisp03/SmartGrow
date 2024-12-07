@@ -6,19 +6,19 @@ from datetime import datetime
 import json
 
 class User(UserMixin):
-    def __init__(self, username, email, password=None, items=None, _id=None):
+    def __init__(self, username, email, password=None, devices=None, _id=None):
         self._id = _id
         self.username = username
         self.email = email
         self.password = password
-        self.items = [Item(**item) if isinstance(item, dict) else item for item in items] if items else []
+        self.devices = [Device(**device) if isinstance(device, dict) else device for device in devices] if devices else []
 
     def save(self):
         user_data = {
             'username': self.username,
             'email': self.email,
             'password': self.password,
-            'items': self.get_items()
+            'devices': self.get_devices()
         }
 
         if not self._id:
@@ -38,34 +38,34 @@ class User(UserMixin):
             '_id': str(self._id) if self._id else None,
             'username': self.username,
             'email': self.email,
-            'items': self.get_items()
+            'devices': self.get_devices()
         }
     
-    def add_item(self, item_name):
-        if self.get_item_by_name(item_name):
-            return self.items
+    def add_device(self, device_name):
+        if self.get_device_by_name(device_name):
+            return self.devices
 
-        self.items.append(Item(name=item_name))
+        self.devices.append(Device(name=device_name))
         self.save()
 
-        return self.items
+        return self.devices
 
-    def get_item_by_id(self, id):
-        if 0 <= id < len(self.items):
-            if self.items[id] is not None:
-                return self.items[id].response_data()
+    def get_device_by_id(self, id):
+        if 0 <= id < len(self.devices):
+            if self.devices[id] is not None:
+                return self.devices[id].response_data()
 
         return None
 
-    def get_item_by_name(self, item_name):
-        for item in self.items:
-            if item.name == item_name:
-                return item
+    def get_device_by_name(self, device_name):
+        for device in self.devices:
+            if device.name == device_name:
+                return device
             
         return None
     
-    def get_items(self):
-        return [item.response_data() for item in self.items]
+    def get_devices(self):
+        return [device.response_data() for device in self.devices]
 
     def get_id(self):
         return str(self._id)
@@ -94,7 +94,7 @@ class User(UserMixin):
     def __repr__(self):
         return f"<User {self.username}>"
 
-class Item:
+class Device:
     def __init__(self, name, temperature=None, water_level=None, humidity=None):
         self.name = name
         self.temperature = temperature or {}
@@ -136,7 +136,7 @@ class Item:
         self.add_reading(self.humidity, humidity)
 
     def __repr__(self):
-        return f"<Item {self.name}>"
+        return f"<Device {self.name}>"
 
     def __str__(self):
-        return f"<Item {self.name}>"
+        return f"<Device {self.name}>"

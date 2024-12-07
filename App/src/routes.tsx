@@ -9,6 +9,7 @@ import App from './pages/home/home';
 import Login from './pages/login/login';
 import Register from './pages/register/register';
 import Dashboard from './pages/dashboard/dashboard';
+import Devices from './pages/devices/devices';
 import Error from './pages/error/error';
 
 const Routing: FC = () => {
@@ -20,7 +21,8 @@ const Routing: FC = () => {
         <Route path="/" element={<App />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path='/dashboard' element={<Dashboard />} />
+        <Route path='/devices' element={<Devices />} />
+        <Route path='/devices/:id' element={<Dashboard />} />
         <Route path="*" element={<Error />} />
       </Routes>
 

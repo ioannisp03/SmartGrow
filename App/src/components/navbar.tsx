@@ -167,7 +167,10 @@ function ResponsiveAppBar() {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              <MenuItem key="Dashboard" onClick={() => navigate("/dashboard")}><Typography sx={{ textAlign: 'center' }}>Dashboard</Typography></MenuItem>
+              <MenuItem key="Devices" onClick={() => {
+                navigate("/devices")
+                handleCloseUserMenu()
+              }}><Typography sx={{ textAlign: 'center' }}>Devices</Typography></MenuItem>
               <MenuItem key="Logout" onClick={handleLogout}><Typography sx={{ textAlign: 'center' }}>Logout</Typography></MenuItem>
             </Menu>
           </Box>) : (
