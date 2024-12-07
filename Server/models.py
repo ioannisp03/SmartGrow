@@ -97,9 +97,9 @@ class User(UserMixin):
 class Device:
     def __init__(self, name, temperature=None, water_level=None, humidity=None):
         self.name = name
-        self.temperature = temperature or {}
-        self.water_level = water_level or {}
-        self.humidity = humidity or {}
+        self.temperature = temperature or []
+        self.water_level = water_level or []
+        self.humidity = humidity or []
 
     def response_data(self):
         return {
@@ -113,18 +113,17 @@ class Device:
     def to_dict(cls, data):
         return {
             "name": data["name"],
-            "temperature": data.get("temperature", {}),
-            "water_level": data.get("water_level", {}),
-            "humidity": data.get("humidity", {})
+            "temperature": data.get("temperature", []),
+            "water_level": data.get("water_level", []),
+            "humidity": data.get("humidity", [])
         }
 
     def add_reading(self, data_map, reading):
-        current_hour = int(datetime.now().timestamp())
-        data_map[current_hour] = reading
+        current_time = int(datetime.now().timestamp())
+        data_map.append({"time": current_time, "value": reading})
 
         if len(data_map) > 24:
-            oldest_key = min(data_map.keys())
-            del data_map[oldest_key]
+            data_map.pop(0)
 
     def add_temperature(self, temperature):
         self.add_reading(self.temperature, temperature)

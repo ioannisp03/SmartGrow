@@ -1,26 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Container, Typography, Box, Paper, Grid, Switch, CircularProgress } from "@mui/material";
+import { Container, Typography, Box, Paper, Grid, Switch, Button, Skeleton } from "@mui/material";
 import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, ResponsiveContainer } from "recharts";
 
 import { useAuth } from "../../services/authcontext";
 import { ResponseInterface } from "../../types/Response";
+import { DeviceInterface } from "../../types/Device";
 
 export default function Dashboard() {
     const { id } = useParams();
 
-    const { user, isAuthenticated, checkAuthStatus } = useAuth();
+    const { checkAuthStatus } = useAuth();
 
-    const [deviceData, setDeviceData] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [isWaterOn, setIsWaterOn] = useState(false);
-    const [leds, setLeds] = useState({
-        lights: { status: false },
-    });
+    const [deviceSavedData, setDeviceSavedData] = useState<DeviceInterface | null>(null);
+    const [deviceCurrentData, setDeviceCurrentData] = useState<DeviceInterface | null>(null);
 
-    const [currentTime, setCurrentTime] = useState(
-        new Date().toLocaleTimeString()
-    );
+    const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -33,74 +28,121 @@ export default function Dashboard() {
         const fetchData = async () => {
             try {
                 await checkAuthStatus();
-
                 if (!id) return;
 
                 const response = await fetch(`/api/devices/${id}`);
-                
+
                 if (response.ok) {
                     const result: ResponseInterface = await response.json();
-
-                    setDeviceData(result.data);
-
-                    console.log(deviceData)
+                    setDeviceSavedData(result.data);
                 } else {
                     console.error("Error fetching device data");
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
-            } finally {
-                setLoading(false);
             }
         };
 
         fetchData();
-    }, [id, user, isAuthenticated]);
-
-    const handleWaterSwitchChange = (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        setIsWaterOn(event.target.checked);
-    };
-
-    // Not sure how this will be handled yet, I just made it buildable for now
-    const handleLightSwitchChange =
-        (lightKey: any) => (event: React.ChangeEvent<HTMLInputElement>) => {
-            setLeds((prevLeds) => ({
-                ...prevLeds,
-                [lightKey]: { status: event.target.checked },
-            }));
-        };
-
-    // Dummy data for graph
-    const placeholderData = [
-        { time: "10:00 AM", temperature: 22 },
-        { time: "11:00 AM", temperature: 24 },
-        { time: "12:00 PM", temperature: 23 },
-        { time: "01:00 PM", temperature: 25 },
-    ];
+    }, [id, checkAuthStatus]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            await checkAuthStatus();
-            setLoading(false);
-        };
+        const interval = setInterval(() => {
+            handleLiveDataFetch();
+        }, 5000);
 
-        fetchData();
-    }, [user !== null]);
+        return () => clearInterval(interval);
+    }, [id]);
 
-    if (loading || !isAuthenticated) return <CircularProgress color="success" />;
+    const handleLiveDataFetch = async () => {
+        try {
+            if (!id) return;
+
+            const response = await fetch(`/api/devices/${id}/live`);
+
+            if (response.ok) {
+                const result: ResponseInterface = await response.json();
+
+                setDeviceCurrentData(result.data);
+            } else {
+                console.error("Error fetching live data");
+            }
+        } catch (error) {
+            console.error("Error fetching live data:", error);
+        }
+    };
+
+    const handleValveSwitchChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newValveState = event.target.checked;
+
+        try {
+            const response = await fetch(`/api/devices/${id}/valve`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ valve_toggle: newValveState }),
+            });
+
+            if (response.ok) {
+                setDeviceCurrentData((prevState) => {
+                    if (prevState) {
+                        return {
+                            ...prevState,
+                            valve_toggle: newValveState,
+                        };
+                    }
+                    return prevState;
+                });
+            } else {
+                console.error("Error updating valve state");
+            }
+        } catch (error) {
+            console.error("Error updating valve state:", error);
+        }
+    };
+
+    const handleLightSwitchChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newLightState = event.target.checked;
+
+        try {
+            const response = await fetch(`/api/devices/${id}/light`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ light_toggle: newLightState }),
+            });
+
+            if (response.ok) {
+                setDeviceCurrentData((prevState) => {
+                    if (prevState) {
+                        return {
+                            ...prevState,
+                            light_toggle: newLightState,
+                        };
+                    }
+                    return prevState;
+                });
+            } else {
+                console.error("Error updating light state");
+            }
+        } catch (error) {
+            console.error("Error updating light state:", error);
+        }
+    };
 
     return (
         <Container maxWidth="xl" sx={{ marginTop: 4 }}>
             {/* Title Section */}
             <Paper elevation={3} sx={{ padding: 4, marginBottom: 4 }}>
                 <Typography variant="h3" sx={{ fontWeight: "bold" }}>
-                    SmartGrow Dashboard
+                    {deviceSavedData ? `${deviceSavedData.name}'s Dashboard` : <Skeleton width="60%" />}
                 </Typography>
                 <Typography variant="body1" sx={{ color: "gray" }}>
-                    Welcome to the SmartGrow system! <br />
-                    Track and Manage Your Device From Here.
+                    {deviceSavedData ? (
+                        <>Welcome to the SmartGrow system! <br />Track and Manage Your Device From Here.</>
+                    ) : <Skeleton width="80%" />}
                 </Typography>
             </Paper>
 
@@ -110,44 +152,53 @@ export default function Dashboard() {
                 <Grid item xs={12} md={6}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
                         <Typography variant="h5" gutterBottom>
-                            Toggles
+                            {deviceCurrentData ? "Toggles" : <Skeleton width="40%" />}
                         </Typography>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                            {/* Light 1 Switch */}
+                            {/* Light Toggle */}
                             <Paper
                                 elevation={2}
                                 sx={{
                                     padding: 2,
-                                    backgroundColor: leds.lights?.status
+                                    backgroundColor: deviceCurrentData?.light_toggle
                                         ? "lightgreen"
                                         : "lightcoral",
-                                }}
-                            >
-                                <Typography>
-                                    Lights: {leds.lights?.status ? "ON" : "OFF"}
-                                </Typography>
-                                <Switch
-                                    checked={leds.lights?.status}
-                                    onChange={handleLightSwitchChange("lights")}
-                                    inputProps={{ "aria-label": "Lights switch" }}
-                                />
+                                }}>
+                                {deviceCurrentData ? (
+                                    <Typography>Lights: ${deviceCurrentData?.light_toggle ? "ON" : "OFF"}</Typography>
+                                ) : <Skeleton width="50%" />}
+
+                                {deviceCurrentData ? (
+                                    <Switch
+                                        checked={deviceCurrentData?.light_toggle || false}
+                                        onChange={handleLightSwitchChange}
+                                        inputProps={{ "aria-label": "Lights switch" }}
+                                    />
+                                ) : <Skeleton width="20%" />}
                             </Paper>
+                            {/* Valve Toggle */}
                             <Paper
                                 elevation={3}
                                 sx={{
                                     marginTop: 2,
                                     padding: 2,
-                                    backgroundColor: isWaterOn ? "lightblue" : "lightcoral",
+                                    backgroundColor: deviceCurrentData?.valve_toggle
+                                        ? "lightblue"
+                                        : "lightcoral",
                                 }}
                             >
                                 <Typography>
-                                    Water is currently: {isWaterOn ? "ON" : "OFF"}
+                                    {deviceCurrentData ? (
+                                        `Water Valve is currently: ${deviceCurrentData?.valve_toggle ? "ON" : "OFF"}`
+                                    ) : <Skeleton width="60%" />}
                                 </Typography>
-                                <Switch
-                                    checked={isWaterOn}
-                                    onChange={handleWaterSwitchChange}
-                                    inputProps={{ "aria-label": "Water switch" }}
-                                />
+                                {deviceCurrentData ? (
+                                    <Switch
+                                        checked={deviceCurrentData?.valve_toggle || false}
+                                        onChange={handleValveSwitchChange}
+                                        inputProps={{ "aria-label": "Water valve switch" }}
+                                    />
+                                ) : <Skeleton width="20%" />}
                             </Paper>
                         </Box>
                     </Paper>
@@ -157,30 +208,47 @@ export default function Dashboard() {
                 <Grid item xs={12} md={6}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
                         <Typography variant="h5" gutterBottom>
-                            Environment Metrics
+                            {deviceCurrentData ? "Environment Metrics" : <Skeleton width="60%" />}
                         </Typography>
-                        <Box
-                            sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}
-                        >
+                        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
-                                <Typography>Time</Typography>
-                                {currentTime}
+                                {deviceCurrentData ? (
+                                    <Container maxWidth={false}>
+                                        <Typography>Time:</Typography>
+                                        <Typography>{currentTime}</Typography>
+                                    </Container>
+                                ) : <Skeleton sx={{ padding: 2, width: "100%" }} />}
                             </Paper>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
-                                {/* Add actual humidity of the sensor */}
-                                <Typography>Humidity: 45%</Typography>
+                                {deviceCurrentData ? (
+                                    <Container maxWidth={false}>
+                                        <Typography>Humidity:</Typography>
+                                        <Typography>{deviceCurrentData?.humidity?.[deviceCurrentData?.humidity.length - 1]?.value}</Typography>
+                                    </Container>
+                                ) : <Skeleton sx={{ padding: 2, width: "100%" }} />}
                             </Paper>
                         </Box>
-                        <Paper
-                            elevation={2}
-                            sx={{
-                                marginTop: 2,
-                                padding: 2,
-                            }}
-                        >
-                            {/* Add actual temperature of the sensor */}
-                            <Typography>Temperature: 25°C</Typography>
+                        <Paper elevation={2} sx={{ marginTop: 2, padding: 2 }}>
+                            {deviceCurrentData ? (
+                                <Container maxWidth={false}>
+                                    <Typography>Temperature:</Typography>
+                                    <Typography>{deviceCurrentData?.temperature?.[deviceCurrentData?.temperature.length - 1]?.value}°C</Typography>
+                                </Container>
+                            ) : <Skeleton sx={{ marginTop: 2, padding: 2 }} />}
                         </Paper>
+
+                        <Box sx={{ marginTop: 2 }}>
+                            {deviceCurrentData ? (
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={handleLiveDataFetch}
+                                    sx={{ width: "100%" }}
+                                >
+                                    Fetch Data
+                                </Button>
+                            ) : <Skeleton width="100%" height={36} />}
+                        </Box>
                     </Paper>
                 </Grid>
             </Grid>
@@ -189,24 +257,20 @@ export default function Dashboard() {
             <Grid container spacing={4} sx={{ marginTop: 4 }}>
                 <Grid item xs={12}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
-                        <Typography variant="h5" gutterBottom>
-                            Temperature Over Time
-                        </Typography>
-                        <ResponsiveContainer width="100%" height={400}>
-                            <LineChart
-                                width={900}
-                                height={400}
-                                data={placeholderData}
-                                margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="time" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Line type="monotone" dataKey="temperature" stroke="#8884d8" />
-                            </LineChart>
-                        </ResponsiveContainer>
+                        {deviceSavedData ? <Typography variant="h5" gutterBottom>Temperature Over Time</Typography> : <Skeleton width="60%" />}
+                        
+                        {deviceSavedData ? (
+                            <ResponsiveContainer width="100%" height={400}>
+                                <LineChart width={900} height={400} data={deviceSavedData?.humidity} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="time" name="Time" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Line type="monotone" dataKey="temperature" stroke="#8884d8" name="Temperature" />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : <Skeleton variant="rectangular" width="100%" height={400} />}
                     </Paper>
                 </Grid>
             </Grid>

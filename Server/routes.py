@@ -16,17 +16,28 @@ def home_page(path):
 def error_page(path):
     return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/register')
+def register_page():
+    if current_user.is_authenticated:
+        return redirect(url_for('devices_page'))
+    
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/login')
+def login_page():
+    if current_user.is_authenticated:
+        return redirect(url_for('devices_page'))
+    
+    return send_from_directory(app.static_folder, 'index.html')
+
 @app.route('/devices')
 @login_required
 def devices_page():
     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/register')
-def register_page():
-    return send_from_directory(app.static_folder, 'index.html')
-
-@app.route('/login')
-def login_page():
+@app.route('/devices/<int:device_id>')
+@login_required
+def device_dashboard_page(device_id):
     return send_from_directory(app.static_folder, 'index.html')
 
 # API Endpoints
@@ -173,13 +184,13 @@ def get_live_user_device_by_id(id):
     if user_device == None:
         return Response(message="Device not found")(), 404
     
-    print(user_device)
-        
     mqtt_data = {
         'name': user_device['name'],
-        'humidity': 20,
-        'water_level': 10,
-        'temperature': 30,
+        'humidity': [{ 'time': 0, 'value': 10 }],
+        'water_level': [{ 'time': 0, 'value': 10 }],
+        'temperature': [{ 'time': 0, 'value': 10 }],
+        'light_toggle': True,
+        'valve_toggle': False,
     }
 
     return Response(message='User device fetched', data=mqtt_data)(), 200
