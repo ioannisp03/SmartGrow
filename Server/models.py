@@ -3,8 +3,6 @@ from resources import users, bcrypt
 from flask_login import UserMixin
 from datetime import datetime
 
-import json
-
 class User(UserMixin):
     def __init__(self, username, email, password=None, devices=None, _id=None):
         self._id = _id
@@ -41,13 +39,13 @@ class User(UserMixin):
             'devices': self.get_devices()
         }
     
-    def add_device(self, device_name):
-        existing_device = self.get_device_by_name(device_name)
+    def add_device(self, name):
+        existing_device = self.get_device_by_name(name)
 
         if existing_device:
             return existing_device
 
-        new_device = Device(name=device_name, user=self)
+        new_device = Device(name=name, user=self)
 
         self.devices.append(new_device)
         self.save()
@@ -99,48 +97,35 @@ class User(UserMixin):
         return f"<User {self.username}>"
 
 class Device:
-    def __init__(self, name, user, temperature=None, water_level=None, humidity=None):
+    def __init__(self, name, user, readings=None):
         self.name = name
         self.user = user
-        self.temperature = temperature or []
-        self.water_level = water_level or []
-        self.humidity = humidity or []
+        self.readings = readings or []
 
     def response_data(self):
         return {
             "name": self.name,
-            "temperature": self.temperature,
-            "water_level": self.water_level,
-            "humidity": self.humidity
+            "readings": self.readings
         }
 
-    @classmethod
-    def to_dict(cls, data):
-        return {
-            "name": data["name"],
-            "temperature": data.get("temperature", []),
-            "water_level": data.get("water_level", []),
-            "humidity": data.get("humidity", [])
+    def add_reading(self, temperature=None, humidity=None, light=None, moisture=None):
+        reading = {
+            "time": int(datetime.now().timestamp()),
+            "temperature": temperature,
+            "humidity": humidity,
+            "light": light,
+            "moisture": moisture
         }
 
-    def add_reading(self, data_map, reading):
-        current_time = int(datetime.now().timestamp())
-        data_map.append({"time": current_time, "value": reading})
+        reading = {k: v for k, v in reading.items() if v is not None}
 
-        if len(data_map) > 24:
-            data_map.pop(0)
+        self.readings.append(reading)
+
+        if len(self.readings) > 24:
+            self.readings.pop(0)
 
         if self.user:
             self.user.save()
-
-    def add_temperature(self, temperature):
-        self.add_reading(self.temperature, temperature)
-
-    def add_water_level(self, water_level):
-        self.add_reading(self.water_level, water_level)
-
-    def add_humidity(self, humidity):
-        self.add_reading(self.humidity, humidity)
 
     def __repr__(self):
         return f"<Device {self.name}>"

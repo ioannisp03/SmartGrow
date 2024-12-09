@@ -1,6 +1,8 @@
+import { DeviceInterface } from "./Device";
+
 export interface UserInterface {
     id: number;
     username: string;
     email: string;
-    pi: number;
+    devices: Array<DeviceInterface>;
 }

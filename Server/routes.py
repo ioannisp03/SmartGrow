@@ -6,6 +6,8 @@ from models import User
 from resources import app, login_manager
 from response import Response
 
+import random
+
 # Webpage Endpoints
 
 @app.route('/', defaults={'path': ''})
@@ -52,9 +54,7 @@ def register():
     if not data:
         return Response(message='No data provided')(), 400
 
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
+    username, email, password = data.get('username'), data.get('email'), data.get('password')
 
     if not username or not email or not password:
         return Response(message='Missing required fields')(), 400
@@ -75,9 +75,10 @@ def login():
         return Response(message="User already authenticated.")(), 400
     
     data = request.get_json()
+    if not data:
+        return Response(message='No data provided')(), 400
 
-    username = data.get('username')
-    password = data.get('password')
+    username, password = data.get('username'), data.get('password')
 
     if not username or not password:
         return Response(message='Missing required fields')(), 400
@@ -99,24 +100,17 @@ def logout():
 @app.route('/api/user', methods=['GET'])
 @login_required
 def get_user_info():
-    if not current_user.is_authenticated:
-        return Response(message='Unauthorized')(), 401
-
     return Response(message='User data fetched', data=current_user.response_data())(), 200
 
 @app.route('/api/devices', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @login_required
 def manage_user_devices():
-    if not current_user.is_authenticated:
-        return Response(message='Unauthorized')(), 401
-
     if request.method == 'GET':
         devices = current_user.get_devices()
 
-        new_item = current_user.add_device("Smart Plant")
+        user_item = current_user.add_device("Smart Plant")
 
-        new_item.add_humidity(10)
-        new_item.add_temperature(10)
+        user_item.add_reading(temperature=random.randint(1, 100), humidity=random.randint(1, 100), light=random.randint(1, 100), moisture=random.randint(1, 100))
 
         return Response(message='User devices fetched', data=devices)(), 200
 
@@ -166,9 +160,6 @@ def manage_user_devices():
 @app.route('/api/devices/<int:id>', methods=['GET'])
 @login_required
 def get_user_device_by_id(id):
-    if not current_user.is_authenticated:
-        return Response(message='Unauthorized')(), 401
-
     user_device = current_user.get_device_by_id(id)
 
     if user_device == None:
@@ -179,9 +170,6 @@ def get_user_device_by_id(id):
 @app.route('/api/devices/<int:id>/live', methods=['GET'])
 @login_required
 def get_live_user_device_by_id(id):
-    if not current_user.is_authenticated:
-        return Response(message='Unauthorized')(), 401
-
     user_device = current_user.get_device_by_id(id)
 
     if user_device == None:
@@ -189,9 +177,12 @@ def get_live_user_device_by_id(id):
     
     mqtt_data = {
         'name': user_device['name'],
-        'humidity': [{ 'time': 0, 'value': 10 }],
-        'water_level': [{ 'time': 0, 'value': 10 }],
-        'temperature': [{ 'time': 0, 'value': 10 }],
+        'readings': [{
+            'temperature': 10,
+            'humidity': 50,
+            'moisture': 20,
+            'light': 20,
+        }],
         'light_toggle': True,
         'valve_toggle': False,
     }

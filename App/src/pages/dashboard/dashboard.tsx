@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+
+import axios from "axios";
+
 import { Container, Typography, Box, Paper, Grid, Switch, Button, Skeleton } from "@mui/material";
 import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, ResponsiveContainer } from "recharts";
 
 import { ResponseInterface } from "../../types/Response";
 import { DeviceInterface } from "../../types/Device";
 
+import { useAuth } from "../../services/authcontext";
+
 export default function Dashboard() {
+    const { user } = useAuth();
     const { id } = useParams();
 
     const [deviceSavedData, setDeviceSavedData] = useState<DeviceInterface | null>(null);
@@ -15,32 +21,19 @@ export default function Dashboard() {
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentTime(new Date().toLocaleTimeString());
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
+        if (!id) return;
+    
+        const device = user?.devices?.[parseInt(id)];
+    
+        if (!device) return;
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                if (!id || deviceSavedData) return;
+        const formattedReadings = device.readings.map((reading: any) => ({
+            ...reading,
+            time: new Date(reading.time * 1000).toLocaleTimeString(),
+        }));
 
-                const response = await fetch(`/api/devices/${id}`);
-
-                if (response.ok) {
-                    const result: ResponseInterface = await response.json();
-                    setDeviceSavedData(result.data);
-                } else {
-                    console.error("Error fetching device data");
-                }
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-
-        fetchData();
-    }, [id, deviceSavedData]);
+        setDeviceSavedData({ ...device, readings: formattedReadings });
+    }, [user, id]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -50,88 +43,53 @@ export default function Dashboard() {
         return () => clearInterval(interval);
     }, [id, deviceCurrentData]);
 
-    const handleLiveDataFetch = async () => {
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(new Date().toLocaleTimeString());
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleToggleChange = async (type: string, newState: boolean) => {
         try {
-            if (!id) return;
-
-            const response = await fetch(`/api/devices/${id}/live`);
-
-            if (response.ok) {
-                const result: ResponseInterface = await response.json();
-
-                setDeviceCurrentData(result.data);
+            const { status } = await axios.post(`/api/devices/${id}/${type}`, {
+                [`${type}_toggle`]: newState,
+            });
+    
+            if (status === 200) {
+                setDeviceCurrentData((prevState) => prevState ? { ...prevState, [`${type}_toggle`]: newState } : prevState);
             } else {
-                console.error("Error fetching live data");
+                console.error(`Error updating ${type} state`);
             }
+        } catch (error) {
+            console.error(`Error updating ${type} state:`, error);
+        }
+    };
+    
+    const handleLiveDataFetch = async () => {
+        if (!id) return;
+    
+        try {
+            const { data }: ResponseInterface = await axios.get(`/api/devices/${id}/live`);
+
+            setDeviceCurrentData(data.data);
         } catch (error) {
             console.error("Error fetching live data:", error);
         }
     };
-
-    const handleValveSwitchChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newValveState = event.target.checked;
-
-        try {
-            const response = await fetch(`/api/devices/${id}/valve`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ valve_toggle: newValveState }),
-            });
-
-            if (response.ok) {
-                setDeviceCurrentData((prevState) => {
-                    if (prevState) {
-                        return {
-                            ...prevState,
-                            valve_toggle: newValveState,
-                        };
-                    }
-                    return prevState;
-                });
-            } else {
-                console.error("Error updating valve state");
-            }
-        } catch (error) {
-            console.error("Error updating valve state:", error);
-        }
+    
+    const handleValveSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        handleToggleChange('valve', event.target.checked);
     };
-
-    const handleLightSwitchChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newLightState = event.target.checked;
-
-        try {
-            const response = await fetch(`/api/devices/${id}/light`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ light_toggle: newLightState }),
-            });
-
-            if (response.ok) {
-                setDeviceCurrentData((prevState) => {
-                    if (prevState) {
-                        return {
-                            ...prevState,
-                            light_toggle: newLightState,
-                        };
-                    }
-                    return prevState;
-                });
-            } else {
-                console.error("Error updating light state");
-            }
-        } catch (error) {
-            console.error("Error updating light state:", error);
-        }
-    };
+    
+    const handleLightSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        handleToggleChange('light', event.target.checked);
+    };    
 
     return (
         <Container maxWidth="xl" sx={{ marginTop: 4 }}>
             {/* Title Section */}
-            <Paper elevation={3} sx={{ padding: 4, marginBottom: 4 }}>
+            <Paper elevation={3} sx={{ padding: 4 }}>
                 <Typography variant="h3" sx={{ fontWeight: "bold" }}>
                     {deviceSavedData ? `${deviceSavedData.name}'s Dashboard` : <Skeleton width="60%" />}
                 </Typography>
@@ -143,7 +101,7 @@ export default function Dashboard() {
             </Paper>
 
             {/* Main Dashboard Grid */}
-            <Grid container spacing={4}>
+            <Grid container spacing={4} sx={{ marginTop: 2 }}>
                 {/* Left Panels */}
                 <Grid item xs={12} md={6}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
@@ -204,7 +162,7 @@ export default function Dashboard() {
                         <Typography variant="h5" gutterBottom>
                             {deviceCurrentData ? "Environment Metrics" : <Skeleton width="60%" />}
                         </Typography>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
                                 {deviceCurrentData ? (
                                     <Container maxWidth={false}>
@@ -216,20 +174,38 @@ export default function Dashboard() {
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
                                 {deviceCurrentData ? (
                                     <Container maxWidth={false}>
-                                        <Typography>Humidity:</Typography>
-                                        <Typography>{deviceCurrentData?.humidity?.[deviceCurrentData?.humidity.length - 1]?.value}</Typography>
+                                        <Typography>Light:</Typography>
+                                        <Typography>{deviceCurrentData?.readings?.[deviceCurrentData?.readings.length - 1]?.light}</Typography>
                                     </Container>
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
                         </Box>
-                        <Paper elevation={2} sx={{ marginTop: 2, padding: 2 }}>
-                            {deviceCurrentData ? (
-                                <Container maxWidth={false}>
-                                    <Typography>Temperature:</Typography>
-                                    <Typography>{deviceCurrentData?.temperature?.[deviceCurrentData?.temperature.length - 1]?.value}°C</Typography>
-                                </Container>
-                            ) : <Skeleton sx={{ marginTop: 2, padding: 2 }} />}
-                        </Paper>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, marginTop: 1 }}>
+                            <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
+                                {deviceCurrentData ? (
+                                    <Container maxWidth={false}>
+                                        <Typography>Temperature:</Typography>
+                                        <Typography>{deviceCurrentData?.readings?.[deviceCurrentData?.readings.length - 1]?.temperature}°C</Typography>
+                                    </Container>
+                                ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
+                            </Paper>
+                            <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
+                                {deviceCurrentData ? (
+                                    <Container maxWidth={false}>
+                                        <Typography>Humidity:</Typography>
+                                        <Typography>{deviceCurrentData?.readings?.[deviceCurrentData?.readings.length - 1]?.humidity}</Typography>
+                                    </Container>
+                                ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
+                            </Paper>
+                            <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
+                                {deviceCurrentData ? (
+                                    <Container maxWidth={false}>
+                                        <Typography>Moisture:</Typography>
+                                        <Typography>{deviceCurrentData?.readings?.[deviceCurrentData?.readings.length - 1]?.moisture}</Typography>
+                                    </Container>
+                                ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
+                            </Paper>
+                        </Box>
 
                         <Box sx={{ marginTop: 2 }}>
                             {deviceCurrentData ? (
@@ -247,21 +223,43 @@ export default function Dashboard() {
                 </Grid>
             </Grid>
 
-            {/* Placeholder Line Chart */}
-            <Grid container spacing={4} sx={{ marginTop: 4 }}>
+            <Grid container spacing={4} sx={{ marginTop: 2 }}>
                 <Grid item xs={12}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
                         {deviceSavedData ? <Typography variant="h5" gutterBottom>Temperature Over Time</Typography> : <Skeleton width="60%" />}
 
                         {deviceSavedData ? (
                             <ResponsiveContainer width="100%" height={400}>
-                                <LineChart width={900} height={400} data={deviceSavedData?.humidity} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                                <LineChart width={900} height={400} data={deviceSavedData?.readings} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="time" name="Time" />
+                                    <YAxis />
+                                    <Tooltip/>
+                                    <Legend />
+                                    <Line type="monotone" dataKey="temperature" stroke="#8884d8" name="Temperature" />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : <Skeleton variant="rectangular" width="100%" height={400} />}
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            <Grid container spacing={4} sx={{ marginTop: 2 }}>
+                <Grid item xs={12}>
+                    <Paper elevation={3} sx={{ padding: 2 }}>
+                        {deviceSavedData ? <Typography variant="h5" gutterBottom>Humidity, Moisture, And Light Over Time</Typography> : <Skeleton width="60%" />}
+
+                        {deviceSavedData ? (
+                            <ResponsiveContainer width="100%" height={400}>
+                                <LineChart width={900} height={400} data={deviceSavedData?.readings} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="time" name="Time" />
                                     <YAxis />
                                     <Tooltip />
                                     <Legend />
-                                    <Line type="monotone" dataKey="temperature" stroke="#8884d8" name="Temperature" />
+                                    <Line type="monotone" dataKey="moisture" stroke="#83ffdb" name="Moisture" />
+                                    <Line type="monotone" dataKey="humidity" stroke="#ffe45f" name="Humidity" />
+                                    <Line type="monotone" dataKey="light" stroke="#e58eff" name="Light" />
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : <Skeleton variant="rectangular" width="100%" height={400} />}
