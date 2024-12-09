@@ -6,10 +6,10 @@ import axios from "axios";
 import { Container, Typography, Box, Paper, Grid, Switch, Button, Skeleton } from "@mui/material";
 import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, ResponsiveContainer } from "recharts";
 
-import { ResponseInterface } from "../../types/Response";
-import { DeviceInterface } from "../../types/Device";
+import { ResponseInterface } from "../types/Response";
+import { DeviceInterface } from "../types/Device";
 
-import { useAuth } from "../../services/authcontext";
+import { useAuth } from "../services/authcontext";
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -103,7 +103,7 @@ export default function Dashboard() {
             {/* Main Dashboard Grid */}
             <Grid container spacing={4} sx={{ marginTop: 2 }}>
                 {/* Left Panels */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={6} sm={12}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
                         <Typography variant="h5" gutterBottom>
                             {deviceCurrentData ? "Toggles" : <Skeleton width="40%" />}
@@ -157,12 +157,12 @@ export default function Dashboard() {
                 </Grid>
 
                 {/* Right Panels */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={6} sm={12}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
                         <Typography variant="h5" gutterBottom>
                             {deviceCurrentData ? "Environment Metrics" : <Skeleton width="60%" />}
                         </Typography>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: { xs: "wrap", sm: "nowrap" }, gap: 1 }}>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
                                 {deviceCurrentData ? (
                                     <Container maxWidth={false}>
@@ -180,7 +180,7 @@ export default function Dashboard() {
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
                         </Box>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, marginTop: 1 }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: { xs: "wrap", sm: "nowrap" }, gap: 1, marginTop: 1 }}>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
                                 {deviceCurrentData ? (
                                     <Container maxWidth={false}>

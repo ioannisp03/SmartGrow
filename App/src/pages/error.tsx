@@ -1,7 +1,5 @@
 import { Container, Typography } from '@mui/material';
 
-import "./error.css";
-
 export default function() {
   return (
     <Container maxWidth="xl">

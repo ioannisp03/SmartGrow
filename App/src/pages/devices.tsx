@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CircularProgress, Container, Grid, Card, CardContent, Typography, CardMedia, ButtonBase } from "@mui/material";
 
-import { DeviceInterface } from "../../types/Device";
-import { ResponseInterface } from "../../types/Response";
+import { DeviceInterface } from "../types/Device";
+import { ResponseInterface } from "../types/Response";
 
-import { useAuth } from "../../services/authcontext";
+import { useAuth } from "../services/authcontext";
 
 export default function Devices() {
   const { checkAuthStatus } = useAuth();

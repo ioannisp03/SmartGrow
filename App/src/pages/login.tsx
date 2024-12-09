@@ -4,13 +4,11 @@ import axios, { AxiosError } from "axios";
 import { enqueueSnackbar } from "notistack";
 import { Button, TextField, Container, Typography, Paper, Box } from "@mui/material";
 
-import { useAuth } from "../../services/authcontext";
+import { useAuth } from "../services/authcontext";
 
-import { ResponseInterface } from "../../types/Response";
+import { ResponseInterface } from "../types/Response";
 
-import "./login.css";
-
-const LoginPage: React.FC = () => {
+export default function LoginPage() {
   const { login } = useAuth();
 
   const [username, setUsername] = useState("");
@@ -101,5 +99,3 @@ const LoginPage: React.FC = () => {
     </Container>
   );
 };
-
-export default LoginPage;

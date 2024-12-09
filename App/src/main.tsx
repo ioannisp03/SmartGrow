@@ -10,7 +10,7 @@ import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <SnackbarProvider autoHideDuration={3000} maxSnack={5}>
-    <BrowserRouter>
+    <BrowserRouter basename='/'>
       <AuthProvider>
         <Routing />
       </AuthProvider>

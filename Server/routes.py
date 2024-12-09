@@ -10,9 +10,13 @@ import random
 
 # Webpage Endpoints
 
-@app.route('/', defaults={'path': ''})
-def home_page(path):
-    return send_from_directory(app.static_folder, 'index.html')
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_index(path):
+    if path.startswith("assets") or path == "favicon.ico":
+        return send_from_directory(app.static_folder, path)
+    
+    return send_from_directory(app.static_folder, "index.html")
 
 @app.route('/error', defaults={'path': ''})
 def error_page(path):
@@ -41,6 +45,10 @@ def devices_page():
 @login_required
 def device_dashboard_page(device_id):
     return send_from_directory(app.static_folder, 'index.html')
+
+@app.route("/static/<path:filename>")
+def serve_static(filename):
+    return send_from_directory(app.static_folder, filename)
 
 # API Endpoints
 

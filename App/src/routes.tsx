@@ -5,12 +5,12 @@ import { Route, Routes } from 'react-router-dom';
 import Navbar from './components/navbar';
 import Footer from './components/footer'
 
-import App from './pages/home/home';
-import Login from './pages/login/login';
-import Register from './pages/register/register';
-import Dashboard from './pages/dashboard/dashboard';
-import Devices from './pages/devices/devices';
-import Error from './pages/error/error';
+import App from './pages/home';
+import Login from './pages/login';
+import Register from './pages/register';
+import Dashboard from './pages/dashboard';
+import Devices from './pages/devices';
+import Error from './pages/error';
 
 const Routing: FC = () => {
   return (

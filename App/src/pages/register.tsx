@@ -12,11 +12,9 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import axios, { AxiosError } from "axios";
-import { ResponseInterface } from "../../types/Response";
+import { ResponseInterface } from "../types/Response";
 
-import "./register.css";
-
-const RegisterPage: React.FC = () => {
+export default function RegisterPage() {
   const { enqueueSnackbar } = useSnackbar();
 
   const [username, setUsername] = useState("");
@@ -105,5 +103,3 @@ const RegisterPage: React.FC = () => {
     </Container>
   );
 };
-
-export default RegisterPage;
