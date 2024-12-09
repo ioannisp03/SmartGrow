@@ -39,8 +39,8 @@ To set up the SmartGrow project locally, follow these steps:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/smartgrow.git
-    cd smartgrow
+    git clone https://github.com/yourusername/SmartGrow.git
+    cd SmartGrow/Server
     ```
 
 2. Create a virtual environment and install dependencies:
@@ -52,7 +52,7 @@ To set up the SmartGrow project locally, follow these steps:
     pip install -r requirements.txt
     ```
 
-3. Set up environment variables (e.g., `MQTT_BROKER`, `DB_URI`, etc.). You may need to create a `.env` file for Flask configurations.
+3. Set up environment variables (e.g., `MQTT_BROKER`, `DB_URI`, etc.). You need to create a `.env` file for Flask configurations.
 
 4. Run the backend server:
     ```bash
@@ -65,7 +65,7 @@ To set up the SmartGrow project locally, follow these steps:
 
 1. Change directory to the frontend folder:
     ```bash
-    cd App
+    cd SmartGrow/App
     ```
 
 2. Install the required dependencies:
