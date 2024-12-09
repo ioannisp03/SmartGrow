@@ -39,7 +39,7 @@ To set up the SmartGrow project locally, follow these steps:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/SmartGrow.git
+    git clone https://github.com/isaacwallace123/SmartGrow.git
     cd SmartGrow/Server
     ```
 
