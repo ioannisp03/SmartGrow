@@ -15,6 +15,7 @@ export default function Dashboard() {
     const { user } = useAuth();
     const { id } = useParams();
 
+
     const [deviceSavedData, setDeviceSavedData] = useState<DeviceInterface | null>(null);
     const [deviceCurrentData, setDeviceCurrentData] = useState<DeviceInterface | null>(null);
 

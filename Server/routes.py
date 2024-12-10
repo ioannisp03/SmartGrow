@@ -18,6 +18,10 @@ def serve_index(path):
     
     return send_from_directory(app.static_folder, "index.html")
 
+@app.route('/test/<int:test_id>')
+def test_route(test_id):
+    return send_from_directory(app.static_folder, 'index.html')
+
 @app.route('/error', defaults={'path': ''})
 def error_page(path):
     return send_from_directory(app.static_folder, 'index.html')

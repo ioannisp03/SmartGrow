@@ -7,7 +7,7 @@ const root = resolve(__dirname, "src");
 
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: '/',
   resolve: {
     alias: {
       '@': resolve(root, "./src"),
