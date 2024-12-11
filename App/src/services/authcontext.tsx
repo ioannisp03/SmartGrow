@@ -31,15 +31,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (response.data.authorized) {
                 setUser(response.data.data);
                 setIsAuthenticated(true);
+
+                return response.data.data;
             } else {
                 setUser(null);
                 setIsAuthenticated(false);
                 navigate('/login');
+
+                return null;
             }
         } catch (err) {
             setUser(null);
             setIsAuthenticated(false);
             navigate('/login');
+
+            return null;
         }
     };
 

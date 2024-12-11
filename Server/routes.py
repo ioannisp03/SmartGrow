@@ -6,8 +6,6 @@ from models import User
 from resources import app, login_manager
 from response import Response
 
-import random
-
 # Webpage Endpoints
 
 @app.route("/", defaults={"path": ""})
@@ -122,7 +120,7 @@ def manage_user_devices():
 
         user_item = current_user.add_device("Smart Plant")
 
-        user_item.add_reading(temperature=random.randint(1, 100), humidity=random.randint(1, 100), light=random.randint(1, 100), moisture=random.randint(1, 100))
+        user_item.add_reading()
 
         return Response(message='User devices fetched', data=devices)(), 200
 
@@ -169,37 +167,34 @@ def manage_user_devices():
 
         return Response(message='Device deleted')(), 200
 
-@app.route('/api/devices/<int:id>', methods=['GET'])
+@app.route('/api/devices/<int:id>', methods=['GET', 'POST'])
 @login_required
-def get_user_device_by_id(id):
-    user_device = current_user.get_device_by_id(id)
+def handle_device_by_id(id):
+    if request.method == 'GET':
+        user_device = current_user.get_device_by_id(id)
 
-    if user_device == None:
-        return Response(message="Device not found")(), 404
+        if user_device is None:
+            return Response(message="Device not found")(), 404
 
-    return Response(message='User device fetched', data=user_device)(), 200
+        return Response(message='Device fetched successfully', data=user_device.response_data())(), 200
+    elif request.method == 'POST':
+        device_data = request.get_json()
 
-@app.route('/api/devices/<int:id>/live', methods=['GET'])
-@login_required
-def get_live_user_device_by_id(id):
-    user_device = current_user.get_device_by_id(id)
+        if not device_data:
+            return Response(message='No data provided')(), 400
 
-    if user_device == None:
-        return Response(message="Device not found")(), 404
-    
-    mqtt_data = {
-        'name': user_device['name'],
-        'readings': [{
-            'temperature': 10,
-            'humidity': 50,
-            'moisture': 20,
-            'light': 20,
-        }],
-        'light_toggle': True,
-        'valve_toggle': False,
-    }
+        if not all(key in device_data and isinstance(device_data[key], (int, float)) for key in ["temperature", "humidity", "moisture", "light"]):
+            return Response(message="Missing or invalid fields: temperature, humidity, moisture, light")(), 400
 
-    return Response(message='User device fetched', data=mqtt_data)(), 200
+        user_device = current_user.get_device_by_id(id)
+
+        if user_device is None:
+            return Response(message="Device not found")(), 404
+        
+        user_device.add_reading(**device_data)
+        current_user.save()
+
+        return Response(message='Reading added to device', data=user_device.response_data())(), 201
 
 @login_manager.unauthorized_handler
 def unauthorized():

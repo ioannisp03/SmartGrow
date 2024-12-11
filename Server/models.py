@@ -3,6 +3,8 @@ from resources import users, bcrypt
 from flask_login import UserMixin
 from datetime import datetime
 
+import random
+
 class User(UserMixin):
     def __init__(self, username, email, password=None, devices=None, _id=None):
         self._id = _id
@@ -16,7 +18,7 @@ class User(UserMixin):
             'username': self.username,
             'email': self.email,
             'password': self.password,
-            'devices': self.get_devices()
+            'devices': self.get_devices(exclude_live=True)
         }
 
         if not self._id:
@@ -55,7 +57,7 @@ class User(UserMixin):
     def get_device_by_id(self, id):
         if 0 <= id < len(self.devices):
             if self.devices[id] is not None:
-                return self.devices[id].response_data()
+                return self.devices[id]
 
         return None
 
@@ -66,8 +68,18 @@ class User(UserMixin):
             
         return None
     
-    def get_devices(self):
-        return [device.response_data() for device in self.devices]
+    def get_devices(self, exclude_live=False):
+        devices_data = []
+
+        for device in self.devices:
+            device_data = device.response_data()
+
+            if exclude_live:
+                device_data.pop('live', None)
+
+            devices_data.append(device_data)
+
+        return devices_data
 
     def get_id(self):
         return str(self._id)
@@ -97,35 +109,70 @@ class User(UserMixin):
         return f"<User {self.username}>"
 
 class Device:
-    def __init__(self, name, user, readings=None):
+    def __init__(self, name, user, history=None, live=None):
         self.name = name
         self.user = user
-        self.readings = readings or []
-
-    def response_data(self):
-        return {
-            "name": self.name,
-            "readings": self.readings
+        self.history = history or []
+        self.live = live or {
+            'temperature': None,
+            'humidity': None,
+            'moisture': None,
+            'light': None,
+            'light_toggle': False,
+            'valve_toggle': False,
         }
 
-    def add_reading(self, temperature=None, humidity=None, light=None, moisture=None):
+    def response_data(self):
+        self.update_live()
+
+        return {
+            "name": self.name,
+            "history": self.history,
+            "live": self.live,
+        }
+
+    def add_reading(self):
         reading = {
             "time": int(datetime.now().timestamp()),
-            "temperature": temperature,
-            "humidity": humidity,
-            "light": light,
-            "moisture": moisture
+            "temperature": self.live['temperature'],
+            "humidity": self.live['humidity'],
+            "light": self.live['light'],
+            "moisture": self.live['moisture']
         }
 
         reading = {k: v for k, v in reading.items() if v is not None}
 
-        self.readings.append(reading)
+        self.history.append(reading)
 
-        if len(self.readings) > 24:
-            self.readings.pop(0)
+        if len(self.history) > 24:
+            self.history.pop(0)
 
         if self.user:
             self.user.save()
+    
+    def update_live(self):
+        """This method will be communicating with MQTT to actually pull real data"""
+        temp_data = {
+            'temperature': random.randint(1, 100),
+            'humidity': random.randint(1, 100),
+            'light': random.randint(1, 100),
+            'moisture': random.randint(1, 100),
+            'light_toggle': True,
+            'valve_toggle': False
+        }
+
+        updates = {
+            'temperature': temp_data['temperature'],
+            'humidity': temp_data['humidity'],
+            'light': temp_data['light'],
+            'moisture': temp_data['moisture'],
+            'light_toggle': temp_data['light_toggle'],
+            'valve_toggle': temp_data['valve_toggle']
+        }
+
+        for key, value in updates.items():
+            if value is not None:
+                self.live[key] = value
 
     def __repr__(self):
         return f"<Device {self.name}>"

@@ -6,18 +6,16 @@ import axios from "axios";
 import { Container, Typography, Box, Paper, Grid, Switch, Button, Skeleton } from "@mui/material";
 import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, ResponsiveContainer } from "recharts";
 
-import { ResponseInterface } from "../types/Response";
 import { DeviceInterface } from "../types/Device";
 
 import { useAuth } from "../services/authcontext";
 
 export default function Dashboard() {
-    const { user } = useAuth();
+    const { user, checkAuthStatus } = useAuth();
     const { id } = useParams();
 
 
-    const [deviceSavedData, setDeviceSavedData] = useState<DeviceInterface | null>(null);
-    const [deviceCurrentData, setDeviceCurrentData] = useState<DeviceInterface | null>(null);
+    const [deviceData, setDeviceData] = useState<DeviceInterface | null>(null);
 
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
@@ -28,21 +26,13 @@ export default function Dashboard() {
     
         if (!device) return;
 
-        const formattedReadings = device.readings.map((reading: any) => ({
+        const formattedData = device.history.map((reading: any) => ({
             ...reading,
             time: new Date(reading.time * 1000).toLocaleTimeString(),
         }));
 
-        setDeviceSavedData({ ...device, readings: formattedReadings });
+        setDeviceData({ ...device, history: formattedData });
     }, [user, id]);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            handleLiveDataFetch();
-        }, 5000);
-
-        return () => clearInterval(interval);
-    }, [id, deviceCurrentData]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -58,7 +48,7 @@ export default function Dashboard() {
             });
     
             if (status === 200) {
-                setDeviceCurrentData((prevState) => prevState ? { ...prevState, [`${type}_toggle`]: newState } : prevState);
+                handleLiveDataFetch()
             } else {
                 console.error(`Error updating ${type} state`);
             }
@@ -71,9 +61,13 @@ export default function Dashboard() {
         if (!id) return;
     
         try {
-            const { data }: ResponseInterface = await axios.get(`/api/devices/${id}/live`);
+            await checkAuthStatus();
 
-            setDeviceCurrentData(data.data);
+            const device = user?.devices?.[parseInt(id)];
+
+            if (!device) return;
+
+            setDeviceData(device);
         } catch (error) {
             console.error("Error fetching live data:", error);
         }
@@ -92,10 +86,10 @@ export default function Dashboard() {
             {/* Title Section */}
             <Paper elevation={3} sx={{ padding: 4 }}>
                 <Typography variant="h3" sx={{ fontWeight: "bold" }}>
-                    {deviceSavedData ? `${deviceSavedData.name}'s Dashboard` : <Skeleton width="60%" />}
+                    {deviceData ? `${deviceData.name}'s Dashboard` : <Skeleton width="60%" />}
                 </Typography>
                 <Typography variant="body1" sx={{ color: "gray" }}>
-                    {deviceSavedData ? (
+                    {deviceData ? (
                         <>Welcome to the SmartGrow system! <br />Track and Manage Your Device From Here.</>
                     ) : <Skeleton width="80%" />}
                 </Typography>
@@ -107,7 +101,7 @@ export default function Dashboard() {
                 <Grid item xs={12} md={6} sm={12}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
                         <Typography variant="h5" gutterBottom>
-                            {deviceCurrentData ? "Toggles" : <Skeleton width="40%" />}
+                            {deviceData ? "Toggles" : <Skeleton width="40%" />}
                         </Typography>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                             {/* Light Toggle */}
@@ -115,17 +109,17 @@ export default function Dashboard() {
                                 elevation={2}
                                 sx={{
                                     padding: 2,
-                                    backgroundColor: deviceCurrentData?.light_toggle
+                                    backgroundColor: deviceData?.live?.light_toggle
                                         ? "lightgreen"
                                         : "lightcoral",
                                 }}>
-                                {deviceCurrentData ? (
-                                    <Typography>Lights: {deviceCurrentData?.light_toggle ? "ON" : "OFF"}</Typography>
+                                {deviceData ? (
+                                    <Typography>Lights: {deviceData?.live?.light_toggle ? "ON" : "OFF"}</Typography>
                                 ) : <Skeleton width="50%" />}
 
-                                {deviceCurrentData ? (
+                                {deviceData ? (
                                     <Switch
-                                        checked={deviceCurrentData?.light_toggle || false}
+                                        checked={deviceData?.live?.light_toggle || false}
                                         onChange={handleLightSwitchChange}
                                         inputProps={{ "aria-label": "Lights switch" }}
                                     />
@@ -137,17 +131,17 @@ export default function Dashboard() {
                                 sx={{
                                     marginTop: 2,
                                     padding: 2,
-                                    backgroundColor: deviceCurrentData?.valve_toggle
+                                    backgroundColor: deviceData?.live?.valve_toggle
                                         ? "lightblue"
                                         : "lightcoral",
                                 }}>
-                                {deviceCurrentData ? (
-                                    <Typography>Valve: {deviceCurrentData?.valve_toggle ? "OPEN" : "CLOSED"}</Typography>
+                                {deviceData ? (
+                                    <Typography>Valve: {deviceData?.live?.valve_toggle ? "OPEN" : "CLOSED"}</Typography>
                                 ) : <Skeleton width="60%" />}
 
-                                {deviceCurrentData ? (
+                                {deviceData ? (
                                     <Switch
-                                        checked={deviceCurrentData?.valve_toggle || false}
+                                        checked={deviceData?.live?.valve_toggle || false}
                                         onChange={handleValveSwitchChange}
                                         inputProps={{ "aria-label": "Water valve switch" }}
                                     />
@@ -161,11 +155,11 @@ export default function Dashboard() {
                 <Grid item xs={12} md={6} sm={12}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
                         <Typography variant="h5" gutterBottom>
-                            {deviceCurrentData ? "Environment Metrics" : <Skeleton width="60%" />}
+                            {deviceData ? "Environment Metrics" : <Skeleton width="60%" />}
                         </Typography>
                         <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: { xs: "wrap", sm: "nowrap" }, gap: 1 }}>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
-                                {deviceCurrentData ? (
+                                {deviceData ? (
                                     <Container maxWidth={false}>
                                         <Typography>Time:</Typography>
                                         <Typography>{currentTime}</Typography>
@@ -173,43 +167,43 @@ export default function Dashboard() {
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
-                                {deviceCurrentData ? (
+                                {deviceData ? (
                                     <Container maxWidth={false}>
                                         <Typography>Light:</Typography>
-                                        <Typography>{deviceCurrentData?.readings?.[deviceCurrentData?.readings.length - 1]?.light}</Typography>
+                                        <Typography>{deviceData?.live?.light}</Typography>
                                     </Container>
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
                         </Box>
                         <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: { xs: "wrap", sm: "nowrap" }, gap: 1, marginTop: 1 }}>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
-                                {deviceCurrentData ? (
+                                {deviceData ? (
                                     <Container maxWidth={false}>
                                         <Typography>Temperature:</Typography>
-                                        <Typography>{deviceCurrentData?.readings?.[deviceCurrentData?.readings.length - 1]?.temperature}°C</Typography>
+                                        <Typography>{deviceData?.live?.temperature}°C</Typography>
                                     </Container>
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
-                                {deviceCurrentData ? (
+                                {deviceData ? (
                                     <Container maxWidth={false}>
                                         <Typography>Humidity:</Typography>
-                                        <Typography>{deviceCurrentData?.readings?.[deviceCurrentData?.readings.length - 1]?.humidity}</Typography>
+                                        <Typography>{deviceData?.live?.humidity}</Typography>
                                     </Container>
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
                             <Paper elevation={2} sx={{ padding: 2, width: "100%" }}>
-                                {deviceCurrentData ? (
+                                {deviceData ? (
                                     <Container maxWidth={false}>
                                         <Typography>Moisture:</Typography>
-                                        <Typography>{deviceCurrentData?.readings?.[deviceCurrentData?.readings.length - 1]?.moisture}</Typography>
+                                        <Typography>{deviceData?.live?.moisture}</Typography>
                                     </Container>
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
                         </Box>
 
                         <Box sx={{ marginTop: 2 }}>
-                            {deviceCurrentData ? (
+                            {deviceData ? (
                                 <Button
                                     variant="contained"
                                     color="primary"
@@ -227,11 +221,11 @@ export default function Dashboard() {
             <Grid container spacing={4} sx={{ marginTop: 2 }}>
                 <Grid item xs={12}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
-                        {deviceSavedData ? <Typography variant="h5" gutterBottom>Temperature Over Time</Typography> : <Skeleton width="60%" />}
+                        {deviceData ? <Typography variant="h5" gutterBottom>Temperature Over Time</Typography> : <Skeleton width="60%" />}
 
-                        {deviceSavedData ? (
+                        {deviceData ? (
                             <ResponsiveContainer width="100%" height={400}>
-                                <LineChart width={900} height={400} data={deviceSavedData?.readings} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                                <LineChart width={900} height={400} data={deviceData?.history} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="time" name="Time" />
                                     <YAxis />
@@ -248,11 +242,11 @@ export default function Dashboard() {
             <Grid container spacing={4} sx={{ marginTop: 2 }}>
                 <Grid item xs={12}>
                     <Paper elevation={3} sx={{ padding: 2 }}>
-                        {deviceSavedData ? <Typography variant="h5" gutterBottom>Humidity, Moisture, And Light Over Time</Typography> : <Skeleton width="60%" />}
+                        {deviceData ? <Typography variant="h5" gutterBottom>Humidity, Moisture, And Light Over Time</Typography> : <Skeleton width="60%" />}
 
-                        {deviceSavedData ? (
+                        {deviceData ? (
                             <ResponsiveContainer width="100%" height={400}>
-                                <LineChart width={900} height={400} data={deviceSavedData?.readings} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                                <LineChart width={900} height={400} data={deviceData?.history} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="time" name="Time" />
                                     <YAxis />
