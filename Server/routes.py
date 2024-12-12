@@ -1,7 +1,8 @@
 from flask import send_from_directory, request, redirect, url_for
 from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug import exceptions
 
-from models import User
+from models import User, Device
 
 from resources import app, login_manager
 from response import Response
@@ -15,10 +16,6 @@ def serve_index(path):
         return send_from_directory(app.static_folder, path)
     
     return send_from_directory(app.static_folder, "index.html")
-
-@app.route('/test/<int:test_id>')
-def test_route(test_id):
-    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/error', defaults={'path': ''})
 def error_page(path):
@@ -43,7 +40,7 @@ def login_page():
 def devices_page():
     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/devices/<int:device_id>')
+@app.route('/devices/<string:device_id>')
 @login_required
 def device_dashboard_page(device_id):
     return send_from_directory(app.static_folder, 'index.html')
@@ -112,89 +109,22 @@ def logout():
 def get_user_info():
     return Response(message='User data fetched', data=current_user.response_data())(), 200
 
-@app.route('/api/devices', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/api/user/devices', methods=['GET'])
 @login_required
-def manage_user_devices():
-    if request.method == 'GET':
-        devices = current_user.get_devices()
+def get_user_devices():
+    return Response(message='User devices fetched', data=current_user.get_devices())(), 200
 
-        user_item = current_user.add_device("Smart Plant")
-
-        user_item.add_reading()
-
-        return Response(message='User devices fetched', data=devices)(), 200
-
-    elif request.method == 'POST':
-        device_data = request.get_json()
-
-        if not device_data:
-            return Response(message='Bad request, no data provided')(), 400
-        
-        new_device = current_user.create_device(device_data)
-
-        return Response(message='Device created', data=new_device)(), 201
-
-    elif request.method == 'PUT':
-        device_data = request.get_json()
-
-        if not device_data or 'id' not in device_data:
-            return Response(message='Bad request, missing device ID or data')(), 400
-        
-        device_id = device_data['id']
-        user_device = current_user.get_device_by_id(device_id)
-
-        if user_device is None:
-            return Response(message="Device not found")(), 404
-
-        user_device.update(device_data)
-        current_user.save()
-
-        return Response(message='Device updated', data=user_device)(), 200
-
-    elif request.method == 'DELETE':
-        device_data = request.get_json()
-        
-        if not device_data or 'id' not in device_data:
-            return Response(message='Bad request, missing device ID')(), 400
-        
-        device_id = device_data['id']
-        user_device = current_user.get_device_by_id(device_id)
-
-        if user_device is None:
-            return Response(message="Device not found")(), 404
-
-        current_user.delete_device(device_id)
-
-        return Response(message='Device deleted')(), 200
-
-@app.route('/api/devices/<int:id>', methods=['GET', 'POST'])
+@app.route('/api/user/devices/<string:id>', methods=['GET'])
 @login_required
 def handle_device_by_id(id):
-    if request.method == 'GET':
-        user_device = current_user.get_device_by_id(id)
+    device = Device.get_by_id(id)
+    device.update_live()
+    device.add_reading()
 
-        if user_device is None:
-            return Response(message="Device not found")(), 404
+    if device is None:
+        return Response(message="Device not found")(), 404
 
-        return Response(message='Device fetched successfully', data=user_device.response_data())(), 200
-    elif request.method == 'POST':
-        device_data = request.get_json()
-
-        if not device_data:
-            return Response(message='No data provided')(), 400
-
-        if not all(key in device_data and isinstance(device_data[key], (int, float)) for key in ["temperature", "humidity", "moisture", "light"]):
-            return Response(message="Missing or invalid fields: temperature, humidity, moisture, light")(), 400
-
-        user_device = current_user.get_device_by_id(id)
-
-        if user_device is None:
-            return Response(message="Device not found")(), 404
-        
-        user_device.add_reading(**device_data)
-        current_user.save()
-
-        return Response(message='Reading added to device', data=user_device.response_data())(), 201
+    return Response(message='Device fetched successfully', data=device.response_data())(), 200
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -203,7 +133,7 @@ def unauthorized():
 
     return redirect(url_for('login_page'))
 
-@app.errorhandler(404)
+@app.errorhandler(exceptions.NotFound)
 def notfound(error):
     if request.path.startswith('/api/'):
         return Response(message='api endpoint not found.')(), 404

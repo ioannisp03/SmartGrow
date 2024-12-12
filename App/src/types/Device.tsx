@@ -7,6 +7,7 @@ export interface ReadingInterface {
 }
 
 export interface DeviceInterface {
+    _id: string;
     name: string;
     live?: {
         light_toggle?: boolean;

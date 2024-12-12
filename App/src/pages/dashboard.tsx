@@ -14,7 +14,6 @@ export default function Dashboard() {
     const { user, checkAuthStatus } = useAuth();
     const { id } = useParams();
 
-
     const [deviceData, setDeviceData] = useState<DeviceInterface | null>(null);
 
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());

@@ -23,7 +23,6 @@ const Routing: FC = () => {
         <Route path="/register" element={<Register />} />
         <Route path='/devices' element={<Devices />} />
         <Route path='/devices/:id' element={<Dashboard />} />
-        <Route path='/test/:id' element={<Dashboard />} />  {/**Test route */}
         <Route path="*" element={<Error />} />
       </Routes>
 

@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { CircularProgress, Container, Grid, Card, CardContent, Typography, CardMedia, ButtonBase } from "@mui/material";
 
 import { DeviceInterface } from "../types/Device";
-import { ResponseInterface } from "../types/Response";
 
 import { useAuth } from "../services/authcontext";
 
 export default function Devices() {
-  const { checkAuthStatus } = useAuth();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [devices, setDevices] = useState<DeviceInterface[]>([]);
@@ -16,23 +15,16 @@ export default function Devices() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchDevices = async () => {
-      try {
-        await checkAuthStatus();
-
-        const response = await fetch("/api/devices");
-        const result: ResponseInterface = await response.json();
-
-        setDevices(result.data);
-      } catch (error) {
-        console.error("Error fetching devices:", error);
-      } finally {
-        setLoading(false);
+    const fetchDevices = async() => {
+      if (user && user.devices) {
+        setDevices(user.devices);
       }
+
+      setLoading(false);
     };
 
     fetchDevices();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (

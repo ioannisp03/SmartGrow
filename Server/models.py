@@ -1,5 +1,5 @@
 from bson import ObjectId
-from resources import users, bcrypt
+from resources import users, devices, bcrypt
 from flask_login import UserMixin
 from datetime import datetime
 
@@ -11,14 +11,14 @@ class User(UserMixin):
         self.username = username
         self.email = email
         self.password = password
-        self.devices = [Device(**device, user=self) if isinstance(device, dict) else device for device in devices] if devices else []
+        self.devices = devices or []
 
     def save(self):
         user_data = {
             'username': self.username,
             'email': self.email,
             'password': self.password,
-            'devices': self.get_devices(exclude_live=True)
+            'devices': self.devices
         }
 
         if not self._id:
@@ -38,52 +38,29 @@ class User(UserMixin):
             '_id': str(self._id) if self._id else None,
             'username': self.username,
             'email': self.email,
-            'devices': self.get_devices()
+            'devices': [Device.get_by_id(device_id).response_data() for device_id in self.devices]
         }
     
-    def add_device(self, name):
-        existing_device = self.get_device_by_name(name)
+    def get_device(self, device_id):
+        if device_id in self.devices:
+            return Device.get_by_id(device_id=device_id)
 
-        if existing_device:
-            return existing_device
+    def get_devices(self):
+        return [Device.get_by_id(device_id).response_data() for device_id in self.devices]
 
-        new_device = Device(name=name, user=self)
+    def add_device(self, device_id):
+        if device_id not in self.devices:
+            self.devices.append(device_id)
+            self.save()
 
-        self.devices.append(new_device)
-        self.save()
-
-        return new_device
-
-    def get_device_by_id(self, id):
-        if 0 <= id < len(self.devices):
-            if self.devices[id] is not None:
-                return self.devices[id]
-
-        return None
-
-    def get_device_by_name(self, device_name):
-        for device in self.devices:
-            if device.name == device_name:
-                return device
-            
-        return None
-    
-    def get_devices(self, exclude_live=False):
-        devices_data = []
-
-        for device in self.devices:
-            device_data = device.response_data()
-
-            if exclude_live:
-                device_data.pop('live', None)
-
-            devices_data.append(device_data)
-
-        return devices_data
+    def remove_device(self, device_id):
+        if device_id in self.devices:
+            self.devices.remove(device_id)
+            self.save()
 
     def get_id(self):
         return str(self._id)
-    
+
     @staticmethod
     def get_by_id(user_id):
         user_data = users.find_one({"_id": ObjectId(user_id)})
@@ -98,6 +75,7 @@ class User(UserMixin):
         if user_data:
             return User(**user_data)
 
+
     @staticmethod
     def get_by_email(email):
         user_data = users.find_one({"email": email})
@@ -106,12 +84,16 @@ class User(UserMixin):
             return User(**user_data)
 
     def __repr__(self):
+        return f"<User  {self.username}>"
+
+    def __repr__(self):
         return f"<User {self.username}>"
 
 class Device:
-    def __init__(self, name, user, history=None, live=None):
+    def __init__(self, name, user_id, history=None, live=None, _id=None):
+        self._id = _id
         self.name = name
-        self.user = user
+        self.user_id = user_id
         self.history = history or []
         self.live = live or {
             'temperature': None,
@@ -122,10 +104,27 @@ class Device:
             'valve_toggle': False,
         }
 
+    def save(self):
+        data_saved = {
+            'name': self.name,
+            'user_id': self.user_id,
+            'history': self.history,
+        }
+
+        if not self._id:
+            result = devices.insert_one(data_saved)
+            self._id = result.inserted_id
+        else:
+            devices.update_one({'_id': ObjectId(self._id)}, {"$set": data_saved})
+
+    def get_id(self):
+        return str(self._id)
+
     def response_data(self):
         self.update_live()
 
         return {
+            "_id": str(self._id) if self._id else None,
             "name": self.name,
             "history": self.history,
             "live": self.live,
@@ -147,9 +146,8 @@ class Device:
         if len(self.history) > 24:
             self.history.pop(0)
 
-        if self.user:
-            self.user.save()
-    
+        self.save()
+
     def update_live(self):
         """This method will be communicating with MQTT to actually pull real data"""
         temp_data = {
@@ -173,6 +171,20 @@ class Device:
         for key, value in updates.items():
             if value is not None:
                 self.live[key] = value
+
+    @staticmethod
+    def get_by_id(device_id):
+        device_data = devices.find_one({"_id": ObjectId(device_id)})
+
+        if device_data:
+            return Device(**device_data)
+
+    @staticmethod
+    def create(name, user_id):
+        device = Device(name=name, user_id=user_id)
+        device.save()
+
+        return device
 
     def __repr__(self):
         return f"<Device {self.name}>"
