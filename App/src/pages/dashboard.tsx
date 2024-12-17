@@ -15,10 +15,28 @@ export default function Dashboard() {
     const { id } = useParams();
 
     const [deviceData, setDeviceData] = useState<DeviceInterface | null>(null);
-
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
     useEffect(() => {
+        handleState(id);
+    }, [user, id]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(new Date().toLocaleTimeString());
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            handleLiveDataFetch()
+            handleState(id);
+        }, 1000);
+        return () => clearInterval(interval);
+    });
+
+    const handleState = async(id:string | undefined) => {
         if (!id) return;
     
         const device = user?.devices?.[parseInt(id)];
@@ -31,31 +49,8 @@ export default function Dashboard() {
         }));
 
         setDeviceData({ ...device, history: formattedData });
-    }, [user, id]);
+    }
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentTime(new Date().toLocaleTimeString());
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const handleToggleChange = async (type: string, newState: boolean) => {
-        try {
-            const { status } = await axios.post(`/api/devices/${id}/${type}`, {
-                [`${type}_toggle`]: newState,
-            });
-    
-            if (status === 200) {
-                handleLiveDataFetch()
-            } else {
-                console.error(`Error updating ${type} state`);
-            }
-        } catch (error) {
-            console.error(`Error updating ${type} state:`, error);
-        }
-    };
-    
     const handleLiveDataFetch = async () => {
         if (!id) return;
     
@@ -72,12 +67,26 @@ export default function Dashboard() {
         }
     };
     
-    const handleValveSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        handleToggleChange('valve', event.target.checked);
-    };
+    const handleLightSwitchChange = async() => {
+        if (!id) return;
     
-    const handleLightSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        handleToggleChange('light', event.target.checked);
+        const device = user?.devices?.[parseInt(id)];
+        const toggled = deviceData?.live?.light_toggle;
+
+        try {
+            const { status } = await axios.post(`/api/user/devices/${device?._id}`, {
+                [`toggle`]: !toggled,
+                [`override`]: true
+            });
+    
+            if (status === 200) {
+                handleLiveDataFetch()
+            } else {
+                console.error(`Error updating light state`);
+            }
+        } catch (error) {
+            console.error(`Error updating light state:`, error);
+        }
     };    
 
     return (
@@ -118,7 +127,7 @@ export default function Dashboard() {
 
                                 {deviceData ? (
                                     <Switch
-                                        checked={deviceData?.live?.light_toggle || false}
+                                        checked={deviceData?.live?.light_toggle}
                                         onChange={handleLightSwitchChange}
                                         inputProps={{ "aria-label": "Lights switch" }}
                                     />
@@ -140,8 +149,7 @@ export default function Dashboard() {
 
                                 {deviceData ? (
                                     <Switch
-                                        checked={deviceData?.live?.valve_toggle || false}
-                                        onChange={handleValveSwitchChange}
+                                        checked={deviceData?.live?.valve_toggle}
                                         inputProps={{ "aria-label": "Water valve switch" }}
                                     />
                                 ) : <Skeleton width="20%" />}
@@ -169,7 +177,7 @@ export default function Dashboard() {
                                 {deviceData ? (
                                     <Container maxWidth={false}>
                                         <Typography>Light:</Typography>
-                                        <Typography>{deviceData?.live?.light}</Typography>
+                                        <Typography>{deviceData?.live?.light}%</Typography>
                                     </Container>
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
@@ -187,7 +195,7 @@ export default function Dashboard() {
                                 {deviceData ? (
                                     <Container maxWidth={false}>
                                         <Typography>Humidity:</Typography>
-                                        <Typography>{deviceData?.live?.humidity}</Typography>
+                                        <Typography>{deviceData?.live?.humidity}%</Typography>
                                     </Container>
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
@@ -195,7 +203,7 @@ export default function Dashboard() {
                                 {deviceData ? (
                                     <Container maxWidth={false}>
                                         <Typography>Moisture:</Typography>
-                                        <Typography>{deviceData?.live?.moisture}</Typography>
+                                        <Typography>{deviceData?.live?.moisture}%</Typography>
                                     </Container>
                                 ) : <Skeleton sx={{ padding: 2, width: "60%" }} />}
                             </Paper>
@@ -248,8 +256,8 @@ export default function Dashboard() {
                                 <LineChart width={900} height={400} data={deviceData?.history} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="time" name="Time" />
-                                    <YAxis />
-                                    <Tooltip />
+                                    <YAxis tickFormatter={(value) => `${value}%`} />
+                                    <Tooltip formatter={(value) => `${value}%`} />
                                     <Legend />
                                     <Line type="monotone" dataKey="moisture" stroke="#83ffdb" name="Moisture" />
                                     <Line type="monotone" dataKey="humidity" stroke="#ffe45f" name="Humidity" />

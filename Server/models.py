@@ -89,6 +89,8 @@ class User(UserMixin):
     def __repr__(self):
         return f"<User {self.username}>"
 
+device_dictionary = {}
+
 class Device:
     def __init__(self, name, user_id, history=None, live=None, _id=None):
         self._id = _id
@@ -101,6 +103,7 @@ class Device:
             'moisture': None,
             'light': None,
             'light_toggle': False,
+            'light_user_override': False,
             'valve_toggle': False,
         }
 
@@ -131,6 +134,8 @@ class Device:
         }
 
     def add_reading(self):
+        print(self.live)
+
         reading = {
             "time": int(datetime.now().timestamp()),
             "temperature": self.live['temperature'],
@@ -148,36 +153,21 @@ class Device:
 
         self.save()
 
-    def update_live(self):
-        """This method will be communicating with MQTT to actually pull real data"""
-        temp_data = {
-            'temperature': random.randint(1, 100),
-            'humidity': random.randint(1, 100),
-            'light': random.randint(1, 100),
-            'moisture': random.randint(1, 100),
-            'light_toggle': True,
-            'valve_toggle': False
-        }
-
-        updates = {
-            'temperature': temp_data['temperature'],
-            'humidity': temp_data['humidity'],
-            'light': temp_data['light'],
-            'moisture': temp_data['moisture'],
-            'light_toggle': temp_data['light_toggle'],
-            'valve_toggle': temp_data['valve_toggle']
-        }
-
-        for key, value in updates.items():
-            if value is not None:
-                self.live[key] = value
+    def update_live(self, data=None):
+        if data is not None:
+            self.live = data
 
     @staticmethod
     def get_by_id(device_id):
+        if device_dictionary.get(device_id):
+            return device_dictionary[device_id]
+
         device_data = devices.find_one({"_id": ObjectId(device_id)})
 
         if device_data:
-            return Device(**device_data)
+            device_dictionary[device_id] = Device(**device_data)
+
+            return device_dictionary[device_id]
 
     @staticmethod
     def create(name, user_id):

@@ -4,8 +4,12 @@ from werkzeug import exceptions
 
 from models import User, Device
 
-from resources import app, login_manager
+from resources import app, login_manager, mqtt
 from response import Response
+
+from config import Config
+
+import json
 
 # Webpage Endpoints
 
@@ -107,24 +111,55 @@ def logout():
 @app.route('/api/user', methods=['GET'])
 @login_required
 def get_user_info():
+    device = Device.get_by_id("675f4723300991ac7394193b")
+    device.add_reading()
+    device.save()
+
     return Response(message='User data fetched', data=current_user.response_data())(), 200
 
 @app.route('/api/user/devices', methods=['GET'])
 @login_required
 def get_user_devices():
+    # device = Device.create("Smart Plant", current_user.get_id())
+    # current_user.add_device(device.get_id())
+
     return Response(message='User devices fetched', data=current_user.get_devices())(), 200
 
 @app.route('/api/user/devices/<string:id>', methods=['GET'])
 @login_required
 def handle_device_by_id(id):
     device = Device.get_by_id(id)
-    device.update_live()
-    device.add_reading()
 
     if device is None:
         return Response(message="Device not found")(), 404
 
     return Response(message='Device fetched successfully', data=device.response_data())(), 200
+
+@app.route('/api/user/devices/<string:id>', methods=['POST'])
+@login_required
+def Post_device_by_id(id):
+    device = Device.get_by_id(id)
+    if device is None:
+        return Response(message="Device not found")(), 404
+    
+    data = request.get_json()
+
+    if not data:
+        return Response(message='No data provided')(), 400
+
+    #if data.get('override') is not None or data.get('toggle') is not None:
+    #    return Response(message='Missing required fields')(), 400
+
+    device.live['light_user_override'] = data['override']
+    device.live['light_toggle'] = data['toggle']
+
+    print(device.live)
+
+    mqtt.publish(f"{Config.MQTT_TOPIC_PREFIX}{current_user.get_id()}/{device.get_id()}", json.dumps({
+        "command": (device.live['light_user_override'] and (device.live['light_toggle'] and "lights_on" or "lights_off")) or (int(device.live['light']) < 50 and "lights_on" or "light_off")
+    }));
+
+    return Response(message='Successfully updated device state')(), 200
 
 @login_manager.unauthorized_handler
 def unauthorized():
